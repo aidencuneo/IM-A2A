@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? dna : this.generateDNA(12 + 5);
+    this.dna = (dna || []).length > 0 ? dna : this.generateDNA(13 * 3 + 5);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -40,7 +40,13 @@ class Creature {
     this.darkerColour = color(hue(this.colour), saturation(this.colour), lightness(this.colour) - 20);
     colorMode(RGB);
     // this.startCode = this.readDNA(10);
-    this.loopCode = this.readDNA(12);
+
+    this.mode = 0;
+    this.modes = [
+      this.readDNA(13),
+      this.readDNA(13),
+      this.readDNA(13),
+    ]
 
     // TODO: Change to procedural body instead
     // this.run(this.startCode);
@@ -73,7 +79,9 @@ class Creature {
     if (this.energy < 0)
       this.energy = 0;
 
-    this.run(this.loopCode);
+    // if (this.mode > 0)
+    //   console.log(this.mode, this.modes[this.mode]);
+    this.run(this.modes[this.mode]);
 
     // if (this.x > gameSize / 2)
     //   destroy(this);
@@ -86,6 +94,10 @@ class Creature {
   drawEnt() {
     rectMode(CENTER);
     stroke(this.darkerColour);
+    if (this.debug) {
+      stroke('black');
+      strokeWeight(3);
+    }
     fill(this.colour);
     circle(this.x, this.y, this.size);
     let dx = cos(this.direction) * (this.size / 2 + 1);
@@ -189,48 +201,59 @@ point towards
 
       if (inst == 0)
         continue;
-      else if (inst == 1 && i + 1 < nums.length) // take next num into r0
+      else if (--inst == 0 && i + 1 < nums.length) // take next num into r0
         r0 = nums[++i];
-      else if (inst == 2 && i + 1 < nums.length) // take next num into r1
+      else if (--inst == 0 && i + 1 < nums.length) // take next num into r1
         r1 = nums[++i];
-      else if (inst == 3) // take random
+      else if (--inst == 0) // r0 = 1 - r0
+        r0 = 1 - r0;
+      else if (--inst == 0) // take random
         r0 = random();
-      else if (inst == 4) // take angle of closest creature
+      else if (--inst == 0) // take angle of closest creature
         r0 = closestAngle;
-      else if (inst == 5 && closestOther) // take distance to closest creature
+      else if (--inst == 0 && closestOther) // take distance to closest creature
         r0 = closestDist;
-      else if (inst == 6) // take angle of closest food
+      else if (--inst == 0) // take angle of closest food
         r0 = closestFoodAngle;
-      else if (inst == 7) // take distance to closest food
+      else if (--inst == 0) // take distance to closest food
         r0 = closestFoodDist;
-      else if (inst == 8 && this.energy > 0) { // push towards current direction
+      else if (--inst == 0) // take overpopulation ratio
+        r0 = objects.length / 100;
+      else if (--inst == 0 && this.energy > 0) { // push towards current direction
         this.energy -= 0.000005 * this.size * r0;
         this.x += r0 * cos(this.direction);
         this.y += r0 * sin(this.direction);
       }
-      else if (inst == 9 && this.energy > 0) { // push away from current direction
+      else if (--inst == 0 && this.energy > 0) { // push away from current direction
         this.energy -= 0.000005 * this.size * r0;
         this.x -= r0 * cos(this.direction);
         this.y -= r0 * sin(this.direction);
       }
-      else if (inst == 10) // look at r0
+      else if (--inst == 0) // look at r0
         this.direction = 360 * r0;
-      else if (inst == 11) // threshold r0
+      else if (--inst == 0) // threshold r0
         r0 = r0 > r1 ? 1 : 0;
-      else if (inst == 12 && r0 > 0.5) { // jump to r1 if r0 > 0.5
-        let idx = r1 * (nums.length - 1);
-        idx -= idx % 2;
-        i = idx - 1;
+      else if (--inst == 0) { // switch modes to r0
+        this.mode = constrain(floor(r0 * this.modes.length), 0, this.modes.length - 1);
+        return;
+        // let idx = r1 * (nums.length - 1);
+        // idx -= idx % 2;
+        // i = idx - 1;
       }
-      else if (inst == 13 && this.energy > r0 && millis() - this.lastBred > 1000) { // breed
+      else if (--inst == 0 && r0 > 0.5) { // cycle modes if r0 > 0.5
+        this.mode = (this.mode + 1) % this.modes.length;
+        return;
+      }
+      else if (--inst == 0 && millis() - this.lastBred > 250) { // breed
+        let energyToGive = constrain(r0, 0.1, 1);
         let hit = this.touch();
-        if (hit && hit.tag == 'creature') {
-          this.energy -= r0;
+        if (hit && hit.tag == 'creature' && this.energy > energyToGive + 0.5) {
+          this.energy -= energyToGive;
           this.breed(hit, r0);
           this.lastBred = millis();
         }
       }
-      else if (inst == 14 && millis() - this.lastKill > 1000) { // kill
+      else if (--inst == 0 && millis() - this.lastKill > 500) { // kill
         let hit = this.touch();
         if (hit && hit.tag == 'creature') {
           this.health += min(1, hit.health);
@@ -242,24 +265,28 @@ point towards
           this.lastKill = millis();
         }
       }
-      else if (inst == 15 && millis() - this.lastEat > 100) { // eat
+      else if (--inst == 0 && millis() - this.lastEat > 100) { // eat
         let hit = this.touch();
         if (hit && hit.tag == 'food') {
           this.health += min(1, hit.health);
-          this.energy += min(1, hit.energy);
+          this.energy += hit.energy;
           --hit.health;
-          --hit.energy;
+          hit.energy = 0;
           // if (hit.health <= 0)
           //   destroy(hit);
           this.lastEat = millis();
         }
       }
-      else if (inst == 16 && this.health > 1 && millis() - this.lastConvert > 200) { // convert health to energy
+      else if (--inst == 0 && this.energy > 0.25 && millis() - this.lastBred > 500) { // mitosis
+        this.mitosis();
+        this.lastBred = millis();
+      }
+      else if (--inst == 0 && this.health > 1 && millis() - this.lastConvert > 200) { // convert health to energy
         this.health -= r0;
         this.energy += r0;
         this.lastConvert = millis();
       }
-      else if (inst == 17 && this.energy > 1 && millis() - this.lastConvert > 200) { // convert energy to health
+      else if (--inst == 0 && this.energy > 1 && millis() - this.lastConvert > 200) { // convert energy to health
         this.energy -= r0;
         this.health += r0;
         this.lastConvert = millis();
@@ -289,7 +316,7 @@ point towards
     let dna = [];
     let bDominance = cb.geneDominance / (ca.geneDominance + cb.geneDominance);
 
-    for (let i = 0; i < ceil(a.length + b.length / 2); ++i) {
+    for (let i = 0; i < ceil((a.length + b.length) / 2); ++i) {
       let take = a[i];
       if (random() < 0.01)
         take = random();
@@ -311,5 +338,12 @@ point towards
     spawn(Creature, this.x, this.y, dna, 1, energy);
     // console.log(creature.energy);
     // console.log('bred!', creature.energy);
+  }
+
+  mitosis() {
+    let dx = (this.size / 2 - 1) * cos(this.direction);
+    let dy = (this.size / 2 - 1) * sin(this.direction);
+    this.energy *= 0.5;
+    spawn(Creature, this.x + dx, this.y + dy, this.origDNA, 1, this.energy);
   }
 }

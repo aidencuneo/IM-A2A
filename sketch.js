@@ -47,16 +47,43 @@ let scenes = {
     bg = color('#5170ff');
     // for (let i = 0; i < 100; ++i)
     //   spawn(Creature);
-    spawn(Creature, gameSize / 2, gameSize / 2, [
+    let p = spawn(Creature, gameSize / 2, gameSize / 2, [
       1, 1, 1, 1, 1,
-      6 / 20,
-      10 / 20,
-      1 / 20, 1,
-      8 / 20,
-      15 / 20,
+
+      9 / 20,
+      2 / 20, 30 / 100,
       13 / 20,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      15 / 20,
+      5 / 20,
+      10 / 20,
+      12 / 20,
+      16 / 20,
+      0, 0, 0, 0,
+
+      7 / 20,
+      12 / 20,
+      1 / 20, 1,
+      10 / 20,
+      18 / 20,
+      16 / 20,
+      9 / 20,
+      2 / 20, 30 / 100,
+      3 / 20,
+      13 / 20,
+      15 / 20,
+
+      9 / 20,
+      2 / 20, 30 / 100,
+      13 / 20,
+      15 / 20,
+      5 / 20,
+      10 / 20,
+      12 / 20,
+      16 / 20,
+      0, 0, 0, 0,
     ], 10, 10);
+
+    p.debug = true;
     // player = spawn(Player, gameSize / 2, gameSize / 2);
   },
 };
@@ -466,6 +493,15 @@ function mouseReleased(e) {
 function keyPressed(e) {
   let k = e.key;
   let kl = k.toLowerCase();
+
+  // Debugging
+  if (k == 'e') {
+    let obj = collidingWith(mx, my);
+    if (obj) {
+      console.log('DEBUG HIT');
+      console.log(obj.origDNA);
+    }
+  }
 
   // Commands
   if (k == '/')
