@@ -9,7 +9,11 @@ class Creature {
     this.target = [random(gameSize), random(gameSize)];
     this.x = x ?? random(gameSize);
     this.y = y ?? random(gameSize);
-    this.direction = random(360);
+    this.direction = random(360)
+
+    // Cooldowns
+    this.lastKill = millis();
+    this.lastBred = millis();
 
     // Stats
     // health and damage prop to size
@@ -68,8 +72,8 @@ class Creature {
 
     this.run(this.loopCode);
 
-    if (this.x > gameSize / 2)
-      destroy(this);
+    // if (this.x > gameSize / 2)
+    //   destroy(this);
   }
 
   drawEnt() {
@@ -176,7 +180,7 @@ point towards
         idx -= idx % 2;
         i = idx - 1;
       }
-      else if (inst == 11 && this.energy > reg + 0.5) { // breed
+      else if (inst == 11 && this.energy > reg + 0.5 && millis() - this.lastBred > 1000) { // breed
         // console.log(this.energy, reg);
         this.energy -= reg + 0.5;
         let dx = (this.size / 2 + 2) * cos(this.direction);
@@ -187,7 +191,8 @@ point towards
         hit2 = hit2 == this ? null : hit2;
         let hit = hit1 || hit2;
         this.breed(hit, reg);
-      } else if (inst == 12) { // kill
+        this.lastBred = millis();
+      } else if (inst == 12 && this.lastKill > 1000) { // kill
         let dx = (this.size / 2 + 2) * cos(this.direction);
         let dy = (this.size / 2 + 2) * sin(this.direction);
         let hit1 = collidingWith(this.x + dx, this.y + dy);
@@ -195,11 +200,12 @@ point towards
         hit1 = hit1 == this ? null : hit1;
         hit2 = hit2 == this ? null : hit2;
         let hit = hit1 || hit2;
-        if (hit) {
+        if (hit && hit != this) {
           this.health += hit.health;
           this.energy += hit.energy;
           destroy(hit);
         }
+        this.lastKill = millis();
       }
 
       reg = constrain(abs(reg), 0, 1);

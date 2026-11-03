@@ -45,7 +45,7 @@ let redScreenTint = 0;
 let scenes = {
   'main': () => {
     bg = color('#5170ff');
-    for (let i = 0; i < 50; ++i)
+    for (let i = 0; i < 100; ++i)
       spawn(Creature);
     // player = spawn(Player, gameSize / 2, gameSize / 2);
   },
@@ -249,9 +249,13 @@ function drawUI() {
 }
 
 function update() {
-  if (millis() - lastSpawn > 1000) {
+  // if (millis() - lastSpawn > 1000) {
+  //   spawn(Creature);
+  //   lastSpawn = millis();
+  // }
+
+  if (mouseButton.right) {
     spawn(Creature);
-    lastSpawn = millis();
   }
 }
 
@@ -334,6 +338,9 @@ function loadScene(name) {
 
 // Object functions
 function spawn(objClass, ...args) {
+  if (objects.length >= 200)
+    return;
+
   let obj = new objClass(...args);
   objects.push(obj);
   registerAll(obj);
@@ -413,8 +420,10 @@ function unregisterEvent(obj, event, eventFns) {
 
 // User input
 function mousePressed(e) {
-  let obj = collidingWith(mx, my);
-  if (obj) destroy(obj);
+  if (e.button == 0) {
+    let obj = collidingWith(mx, my);
+    if (obj) destroy(obj);
+  }
 
   for (let fn of mousePressedFns) fn[1](e.button);
 }
