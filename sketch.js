@@ -5,7 +5,7 @@
 
 */
 
-let gameSize = 128;
+let gameSize = 192;
 
 // Events
 let updateFns = [];
@@ -45,20 +45,17 @@ let redScreenTint = 0;
 let scenes = {
   'main': () => {
     bg = color('#5170ff');
-    for (let i = 0; i < 100; ++i)
-      spawn(Creature);
+    // for (let i = 0; i < 100; ++i)
+    //   spawn(Creature);
     spawn(Creature, gameSize / 2, gameSize / 2, [
-      1, 1, 1, 1,
-      4 / 20, 1,
-      8 / 20, 1,
-      6 / 20, 1,
-      9 / 20, 0,
-      11 / 20, 1,
-      12 / 20, 1,
-      1, 1,
-      1, 1,
-      1, 1,
-      1, 1,
+      1, 1, 1, 1, 1,
+      6 / 20,
+      10 / 20,
+      1 / 20, 1,
+      8 / 20,
+      15 / 20,
+      13 / 20,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ], 10, 10);
     // player = spawn(Player, gameSize / 2, gameSize / 2);
   },
@@ -294,7 +291,8 @@ function update() {
     spawn(Creature);
   }
   
-  console.log(creatureCount, round(totalHealth, 1), round(totalEnergy, 1));
+  if (frameCount % 10 == 0)
+    console.log(creatureCount, round(totalHealth, 1), round(totalEnergy, 1));
 }
 
 function reactiveCam() {
