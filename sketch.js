@@ -59,7 +59,7 @@ let scenes = {
       1, 1,
       1, 1,
       1, 1,
-    ], 100, 100);
+    ], 10, 10);
     // player = spawn(Player, gameSize / 2, gameSize / 2);
   },
 };
@@ -294,7 +294,7 @@ function update() {
     spawn(Creature);
   }
   
-  // console.log(creatureCount, round(totalHealth, 1), round(totalEnergy, 1));
+  console.log(creatureCount, round(totalHealth, 1), round(totalEnergy, 1));
 }
 
 function reactiveCam() {

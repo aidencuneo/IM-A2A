@@ -13,6 +13,7 @@ class Creature {
     this.x = x ?? random(gameSize);
     this.y = y ?? random(gameSize);
     this.direction = random(360)
+    this.age = 0;
 
     // Cooldowns
     this.lastKill = millis();
@@ -64,7 +65,8 @@ class Creature {
     this.y = constrain(this.y, this.size / 2, gameSize - this.size / 2);
 
     // Slowly die
-    this.health -= 0.002;
+    this.age += delta;
+    this.health -= pow(2, floor(this.age / 20)) * 0.001;
     if (this.health <= 0)
       destroy(this);
 
@@ -211,22 +213,22 @@ point towards
       }
       else if (inst == 11 && this.energy > reg && millis() - this.lastBred > 1000) { // breed
         // console.log(this.energy, reg);
-        let dx = (this.size / 2) * cos(this.direction);
-        let dy = (this.size / 2) * sin(this.direction);
+        let dx = (this.size / 2 - 1) * cos(this.direction);
+        let dy = (this.size / 2 - 1) * sin(this.direction);
         // console.log(this.x, this.y);
         let hit1 = collidingWith(this.x + dx, this.y + dy);
         let hit2 = collidingWith(this.x, this.y);
         hit1 = hit1 == this ? null : hit1;
         hit2 = hit2 == this ? null : hit2;
         let hit = hit1 || hit2;
-        if (hit && hit != this) {
+        if (hit && hit != this && hit.tag == 'creature') {
           this.energy -= reg;
           this.breed(hit, reg);
           this.lastBred = millis();
         }
-      } else if (inst == 12 && millis() - this.lastKill > 500) { // kill
-        let dx = (this.size / 2) * cos(this.direction);
-        let dy = (this.size / 2) * sin(this.direction);
+      } else if (inst == 12 && millis() - this.lastKill > 1000) { // kill
+        let dx = (this.size / 2 - 1) * cos(this.direction);
+        let dy = (this.size / 2 - 1) * sin(this.direction);
         let hit1 = collidingWith(this.x + dx, this.y + dy);
         let hit2 = collidingWith(this.x, this.y);
         hit1 = hit1 == this ? null : hit1;
@@ -250,13 +252,13 @@ point towards
   spliceDNA(a, b) {
     let dna = [];
     for (let i = 0; i < a.length; ++i) {
-      if (random() < 0.02) {
-        dna.push(random());
-        continue;
-      }
-      let avg = (a[i] + b[i]) / 2;
-      avg += random(-0.02, 0.02);
-      dna.push(avg);
+      let take = a[i];
+      if (random() < 0.02)
+        take = random();
+      else if (random() < 0.5)
+        take = b[i];
+      take += random(-0.02, 0.02);
+      dna.push(take);
     }
     return dna;
   }
