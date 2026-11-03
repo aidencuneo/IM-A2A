@@ -254,9 +254,29 @@ function update() {
   //   lastSpawn = millis();
   // }
 
+  let totalHealth = 0;
+  let totalEnergy = 0;
+  let creatureCount = 0;
+  let foodCount = 0;
+  for (let o of objects) {
+    if (o.tag == 'creature') {
+      totalHealth += o.health;
+      totalEnergy += o.energy;
+      ++creatureCount;
+    } else if (o.tag == 'food')
+      ++foodCount;
+  }
+
+  if (millis() - lastSpawn > 1000 && foodCount < 20) {
+    spawn(Food);
+    lastSpawn = millis();
+  }
+
   if (mouseButton.right) {
     spawn(Creature);
   }
+  
+  console.log(creatureCount, round(totalHealth, 1), round(totalEnergy, 1));
 }
 
 function reactiveCam() {
@@ -338,7 +358,7 @@ function loadScene(name) {
 
 // Object functions
 function spawn(objClass, ...args) {
-  if (objects.length >= 200)
+  if (objects.length >= 300)
     return;
 
   let obj = new objClass(...args);

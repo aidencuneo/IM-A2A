@@ -3,7 +3,8 @@ class Creature {
     this.tag = 'creature';
 
     // Get DNA
-    this.dna = (dna || []).length > 0 ? dna : this.generateDNA(64);
+    this.dna = (dna || []).length > 0 ? dna : this.generateDNA(24);
+    // print(this.dna);
 
     // State
     this.target = [random(gameSize), random(gameSize)];
@@ -23,7 +24,7 @@ class Creature {
     //   effort is the amount of energy to use
 
     // Read more stuff from DNA
-    this.size = 5 * this.readDNA(1) + 5;
+    this.size = map(this.readDNA(1)[0], 0, 1, 5, 10);
     this.energy = energy ?? 1;
     this.health = health ?? 1;
 
@@ -32,15 +33,10 @@ class Creature {
     this.darkerColour = color(hue(this.colour), saturation(this.colour), lightness(this.colour) - 20);
     colorMode(RGB);
     // this.startCode = this.readDNA(10);
-    this.loopCode = this.readDNA(64 - 4);
+    this.loopCode = this.readDNA(24 - 4);
 
     // TODO: Change to procedural body instead
     // this.run(this.startCode);
-
-    // if (millis() - this.lastCrack > 5000) {
-    //   this.crack();
-    //   this.lastCrack = millis();
-    // }
   }
 
   generateDNA(length) {
@@ -55,8 +51,8 @@ class Creature {
     // Move around randomly
     if (abs(this.x - this.target[0]) > 2 || abs(this.y - this.target[1]) > 2) {
       let angle = atan2(this.target[1] - this.y, this.target[0] - this.x);
-      this.x += cos(angle) * 0.02;
-      this.y += sin(angle) * 0.02;
+      this.x += cos(angle) * 0.05;
+      this.y += sin(angle) * 0.05;
     } else {
       this.target = [random(gameSize), random(gameSize)];
     }
@@ -66,7 +62,7 @@ class Creature {
     this.y = constrain(this.y, this.size / 2, gameSize - this.size / 2);
 
     // Slowly die
-    this.health -= 0.0002;
+    this.health -= 0.002;
     if (this.health <= 0)
       destroy(this);
 
@@ -94,11 +90,6 @@ class Creature {
     fill(c);
     stroke(c);
     circle(this.x, this.y, this.size);
-  }
-
-  crack() {
-    let newDNA = this.dna.map(x => random() < 0.01 ? random() : x);
-    spawn(new Creature(newDNA));
   }
 
   run(nums) {
@@ -134,6 +125,9 @@ point towards
     let closestDist = Infinity;
     for (let i = 0; i < objects.length; ++i) {
       let other = objects[i];
+      if (other.tag != 'creature')
+        continue;
+
       let distSqr = createVector(other.x - this.x, other.y - this.y).magSq();
       if (distSqr < closestDist && this != other) {
         closestOther = other;
@@ -192,7 +186,7 @@ point towards
         let hit = hit1 || hit2;
         this.breed(hit, reg);
         this.lastBred = millis();
-      } else if (inst == 12 && this.lastKill > 1000) { // kill
+      } else if (inst == 12 && millis() - this.lastKill > 1000) { // kill
         let dx = (this.size / 2 + 2) * cos(this.direction);
         let dy = (this.size / 2 + 2) * sin(this.direction);
         let hit1 = collidingWith(this.x + dx, this.y + dy);
@@ -201,9 +195,12 @@ point towards
         hit2 = hit2 == this ? null : hit2;
         let hit = hit1 || hit2;
         if (hit && hit != this) {
-          this.health += hit.health;
-          this.energy += hit.energy;
-          destroy(hit);
+          this.health += min(1, hit.health);
+          this.energy += min(1, hit.energy);
+          --hit.health;
+          --hit.energy;
+          // if (hit.health <= 0)
+          //   destroy(hit);
         }
         this.lastKill = millis();
       }
