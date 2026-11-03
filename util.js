@@ -11,6 +11,13 @@ function sameList(a, b) {
   return true;
 }
 
+function fixNum(n, def) {
+  def ??= 0;
+  if (!isFinite(n))
+    return def;
+  return n;
+}
+
 /*
 
 p5 functions

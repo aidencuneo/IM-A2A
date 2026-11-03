@@ -47,6 +47,19 @@ let scenes = {
     bg = color('#5170ff');
     for (let i = 0; i < 100; ++i)
       spawn(Creature);
+    spawn(Creature, gameSize / 2, gameSize / 2, [
+      1, 1, 1, 1,
+      4 / 20, 1,
+      8 / 20, 1,
+      6 / 20, 1,
+      9 / 20, 0,
+      11 / 20, 1,
+      12 / 20, 1,
+      1, 1,
+      1, 1,
+      1, 1,
+      1, 1,
+    ], 100, 100);
     // player = spawn(Player, gameSize / 2, gameSize / 2);
   },
 };
@@ -267,16 +280,21 @@ function update() {
       ++foodCount;
   }
 
-  if (millis() - lastSpawn > 1000 && foodCount < 20) {
+  if (millis() - lastSpawn > 250 && foodCount < 12) {
     spawn(Food);
     lastSpawn = millis();
+  }
+
+  if (mouseButton.left) {
+    let obj = collidingWith(mx, my);
+    if (obj) destroy(obj);
   }
 
   if (mouseButton.right) {
     spawn(Creature);
   }
   
-  console.log(creatureCount, round(totalHealth, 1), round(totalEnergy, 1));
+  // console.log(creatureCount, round(totalHealth, 1), round(totalEnergy, 1));
 }
 
 function reactiveCam() {
@@ -440,11 +458,6 @@ function unregisterEvent(obj, event, eventFns) {
 
 // User input
 function mousePressed(e) {
-  if (e.button == 0) {
-    let obj = collidingWith(mx, my);
-    if (obj) destroy(obj);
-  }
-
   for (let fn of mousePressedFns) fn[1](e.button);
 }
 

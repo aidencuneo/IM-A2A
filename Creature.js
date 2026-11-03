@@ -3,6 +3,8 @@ class Creature {
     this.tag = 'creature';
 
     // Get DNA
+    // if (dna && dna.length != 0 && dna.length != 24)
+    //   console.error(dna.length);
     this.dna = (dna || []).length > 0 ? dna : this.generateDNA(24);
     // print(this.dna);
 
@@ -66,6 +68,9 @@ class Creature {
     if (this.health <= 0)
       destroy(this);
 
+    if (this.energy < 0)
+      this.energy = 0;
+
     this.run(this.loopCode);
 
     // if (this.x > gameSize / 2)
@@ -123,72 +128,105 @@ point towards
     // Get closest creature to this one
     let closestOther = null;
     let closestDist = Infinity;
+    let closestFood = null;
+    let closestFoodDist = Infinity;
     for (let i = 0; i < objects.length; ++i) {
       let other = objects[i];
-      if (other.tag != 'creature')
-        continue;
-
       let distSqr = createVector(other.x - this.x, other.y - this.y).magSq();
-      if (distSqr < closestDist && this != other) {
-        closestOther = other;
-        closestDist = distSqr;
+
+      if (other.tag == 'creature') {
+        if (distSqr < closestDist && this != other) {
+          closestOther = other;
+          closestDist = distSqr;
+        }
+      } else if (other.tag == 'food') {
+        if (distSqr < closestFoodDist && this != other) {
+          closestFood = other;
+          closestFoodDist = distSqr;
+        }
       }
     }
 
-    let closestAngle = 0;
+    let closestAngle = random();
     if (closestOther) {
       closestAngle = atan2(closestOther.y - this.y, closestOther.x - this.x);
       closestAngle = (closestAngle + 360) / 360 % 1;
-      // this.direction = closestAngle * 360;
-      // console.log(closestAngle);
     }
 
+    let closestFoodAngle = random();
+    if (closestFood) {
+      closestFoodAngle = atan2(closestFood.y - this.y, closestFood.x - this.x);
+      closestFoodAngle = (closestFoodAngle + 360) / 360 % 1;
+    }
+
+    closestAngle = fixNum(closestAngle);
+    closestFoodAngle = fixNum(closestFoodAngle);
+    closestDist = fixNum(closestDist);
+    closestFoodDist = fixNum(closestFoodDist);
+
+    // if (sameColour(this.colour, 'white')) {
+    //   console.log('same!!!!!!!!!');
+    //   console.log(nums);
+    //   for (let i = 0; i < nums.length; i += 2) {
+    //     console.log(floor(11 * nums[i]));
+    //   }
+    // }
+
+    // console.log(closestAngle, closestDist, closestFoodAngle, closestFoodDist);
+
     for (let i = 0, loops = 0; i < nums.length && loops < 100; i += 2, ++loops) {
-      let inst = floor(13 * nums[i]);
+      let inst = floor(20 * nums[i]);
       let effort = i + 1 < nums.length ? nums[i + 1] : 0;
 
       if (inst == 0) // take effort
         reg = effort;
       else if (inst == 1) // take random
         reg = random();
-      else if (inst == 2) // take health
-        reg = this.health;
-      else if (inst == 3) // take size
-        reg = this.size / 10;
-      else if (inst == 4) // take angle of closest creature
+      else if (inst == 2) // take angle of closest creature
         reg = closestAngle;
-      else if (inst == 5 && closestOther) // take health of closest creature
-        reg = closestOther.health;
-      else if (inst == 6 && closestOther) // take size of closest creature
-        reg = closestOther.size / 10;
-      else if (inst == 7 && this.energy > 0.05) { // push towards reg
-        // this.energy -= 0.01 * this.size * effort;
+      else if (inst == 3 && closestOther) // take distance to closest creature
+        reg = closestDist;
+      else if (inst == 4) // take angle of closest food
+        reg = closestFoodAngle;
+      else if (inst == 5) // take distance to closest food
+        reg = closestFoodDist;
+      else if (inst == 6 && this.energy > 0) { // push towards reg
+        this.energy -= 0.00001 * this.size * effort;
         this.x += effort * cos(reg * 360);
         this.y += effort * sin(reg * 360);
-      } else if (inst == 8) // look at reg
+      }
+      else if (inst == 7 && this.energy > 0) { // push away from reg
+        this.energy -= 0.00001 * this.size * effort;
+        this.x -= effort * cos(reg * 360);
+        this.y -= effort * sin(reg * 360);
+      }
+      else if (inst == 8) // look at reg
         this.direction = 360 * reg;
       else if (inst == 9) // threshold reg
         reg = reg > effort ? 1 : 0;
-      else if (inst == 10) { // jump to effort if reg
+      else if (inst == 10 && reg > 0.5) { // jump to effort if reg > 0.5
         let idx = effort * (nums.length - 1);
         idx -= idx % 2;
         i = idx - 1;
       }
-      else if (inst == 11 && this.energy > reg + 0.5 && millis() - this.lastBred > 1000) { // breed
+      else if (inst == 11 && this.energy > reg && millis() - this.lastBred > 1000) { // breed
         // console.log(this.energy, reg);
-        this.energy -= reg + 0.5;
-        let dx = (this.size / 2 + 2) * cos(this.direction);
-        let dy = (this.size / 2 + 2) * sin(this.direction);
+        let dx = (this.size / 2) * cos(this.direction);
+        let dy = (this.size / 2) * sin(this.direction);
+        // console.log(this.x, this.y);
         let hit1 = collidingWith(this.x + dx, this.y + dy);
         let hit2 = collidingWith(this.x, this.y);
         hit1 = hit1 == this ? null : hit1;
         hit2 = hit2 == this ? null : hit2;
         let hit = hit1 || hit2;
-        this.breed(hit, reg);
-        this.lastBred = millis();
-      } else if (inst == 12 && millis() - this.lastKill > 1000) { // kill
-        let dx = (this.size / 2 + 2) * cos(this.direction);
-        let dy = (this.size / 2 + 2) * sin(this.direction);
+        if (hit && hit != this) {
+          this.energy -= reg;
+          this.breed(hit, reg);
+          this.lastBred = millis();
+        }
+      } else if (inst == 12 && millis() - this.lastKill > 500) { // kill
+        let dx = (this.size / 2) * cos(this.direction);
+        let dy = (this.size / 2) * sin(this.direction);
         let hit1 = collidingWith(this.x + dx, this.y + dy);
         let hit2 = collidingWith(this.x, this.y);
         hit1 = hit1 == this ? null : hit1;
@@ -201,8 +239,8 @@ point towards
           --hit.energy;
           // if (hit.health <= 0)
           //   destroy(hit);
+          this.lastKill = millis();
         }
-        this.lastKill = millis();
       }
 
       reg = constrain(abs(reg), 0, 1);
@@ -226,10 +264,10 @@ point towards
   breed(other, energy) {
     if (!other || other == this) return;
 
-    destroy(this);
+    // destroy(this);
     let dna = this.spliceDNA(this.dna, other.dna);
     let creature = spawn(Creature, this.x, this.y, dna, 1, energy);
     // console.log(creature.energy);
-    console.log('bred!', creature.energy);
+    // console.log('bred!', creature.energy);
   }
 }
