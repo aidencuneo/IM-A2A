@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? dna : this.generateDNA(5 + 13 * 3 + 22);
+    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 13 * 3 + 22);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -30,7 +30,7 @@ class Creature {
     //   effort is the amount of energy to use
 
     // Read more stuff from DNA
-    this.size = map(this.readDNA(1)[0], 0, 1, 5, 10);
+    this.size = map(this.readDNA(1)[0], 0, 1, 3, 15);
     this.geneDominance = this.readDNA(1)[0];
     this.energy = energy ?? 1;
     this.health = health ?? 1;
@@ -73,13 +73,10 @@ class Creature {
     }
 
     // Slowly die
-    this.age += delta;
-    this.health -= pow(1.5, floor(this.age / 30)) * 0.001;
-    if (this.health <= 0)
+    // this.age += delta;
+    // this.health -= pow(1.5, floor(this.age / 30)) * 0.001;
+    if (this.health <= 0 || this.energy <= -1)
       destroy(this);
-
-    if (this.energy < 0)
-      this.energy = 0;
 
     if (frameCount % 10 == 0) {
       let values = [
@@ -92,8 +89,13 @@ class Creature {
       ];
 
       this.mode = this.decideMode(values);
-      this.run(this.modes[this.mode]);
     }
+
+    // if (frameCount % 2 == 0)
+      this.run(this.modes[this.mode]);
+
+    for (let p in selectionPressures)
+      if (selectionPressures[p](this)) destroy(this);
 
     // if (this.x > gameSize / 2)
     //   destroy(this);
@@ -315,16 +317,16 @@ point towards
         this.mitosis();
         this.lastBred = millis();
       }
-      else if (--inst == 0 && this.health > 1 && millis() - this.lastConvert > 200) { // convert health to energy
-        this.health -= r0;
-        this.energy += r0;
-        this.lastConvert = millis();
-      }
-      else if (--inst == 0 && this.energy > 1 && millis() - this.lastConvert > 200) { // convert energy to health
-        this.energy -= r0;
-        this.health += r0;
-        this.lastConvert = millis();
-      }
+      // else if (--inst == 0 && this.health > 1 && millis() - this.lastConvert > 200) { // convert health to energy
+      //   this.health -= r0;
+      //   this.energy += r0;
+      //   this.lastConvert = millis();
+      // }
+      // else if (--inst == 0 && this.energy > 1 && millis() - this.lastConvert > 200) { // convert energy to health
+      //   this.energy -= r0;
+      //   this.health += r0;
+      //   this.lastConvert = millis();
+      // }
 
       r0 = constrain(abs(r0), 0, 1);
       r1 = constrain(abs(r1), 0, 1);
@@ -369,7 +371,7 @@ point towards
 
     // destroy(this);
     let dna = this.spliceDNA(this, other);
-    spawn(Creature, this.x, this.y, dna, 1, energy);
+    spawn(Creature, this.x, this.y, dna, energy, energy);
     // console.log(creature.energy);
     // console.log('bred!', creature.energy);
   }
@@ -377,7 +379,9 @@ point towards
   mitosis() {
     let dx = (this.size / 2 - 1) * cos(this.direction);
     let dy = (this.size / 2 - 1) * sin(this.direction);
+    this.health *= 0.5;
     this.energy *= 0.5;
-    spawn(Creature, this.x + dx, this.y + dy, this.origDNA, 1, this.energy);
+    let dna = this.spliceDNA(this, this);
+    spawn(Creature, this.x + dx, this.y + dy, dna, this.health, this.energy);
   }
 }

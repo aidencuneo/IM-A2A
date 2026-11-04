@@ -35,6 +35,7 @@ let cmdText = '';
 let toasts = [];
 let objects = [];
 let lastSpawn = 0;
+let selectionPressures = {};
 
 // Lerp state
 let cameraShakeOn = true;
@@ -309,7 +310,7 @@ function update() {
       ++foodCount;
   }
 
-  if (millis() - lastSpawn > 250 && foodCount < 12) {
+  if (millis() - lastSpawn > 250 && foodCount < 20) {
     spawn(Food);
     lastSpawn = millis();
   }
@@ -406,7 +407,7 @@ function loadScene(name) {
 
 // Object functions
 function spawn(objClass, ...args) {
-  if (objects.length >= 300)
+  if (objects.length >= 200)
     return;
 
   let obj = new objClass(...args);
@@ -499,15 +500,6 @@ function keyPressed(e) {
   let k = e.key;
   let kl = k.toLowerCase();
 
-  // Debugging
-  if (k == 'e') {
-    let obj = collidingWith(mx, my);
-    if (obj) {
-      console.log('DEBUG HIT');
-      console.log(obj.origDNA);
-    }
-  }
-
   // Commands
   if (k == '/')
     cmdText += '/';
@@ -529,8 +521,34 @@ function keyPressed(e) {
       cmdText += k;
   }
 
-  else
+  else {
+    // Debugging
+    if (k == 'e') {
+      let obj = collidingWith(mx, my);
+      if (obj) {
+        console.log('DEBUG HIT');
+        console.log(obj.modes[obj.mode].map(x => floor(x * 20)));
+      }
+    } else if (k == 'c') {
+      if ('middle' in selectionPressures)
+        delete selectionPressures['middle'];
+      else
+        selectionPressures['middle'] = o => {
+          if (dist(o.x, o.y, gameSize / 2, gameSize / 2) > gameSize / 3)
+            o.health -= 0.005;
+        };
+    } else if (k == 'v') {
+      if ('camo' in selectionPressures)
+        delete selectionPressures['camo'];
+      else
+        selectionPressures['camo'] = o => {
+          // if ( > 50)
+          o.health -= (colourDistance(o.colour, bg) + colourDistance(bg, o.colour)) / 2 / 50000;
+        };
+    }
+
     for (let fn of keyPressedFns) fn[1](kl);
+  }
 }
 
 function keyReleased(e) {
