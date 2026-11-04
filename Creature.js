@@ -133,8 +133,8 @@ class Creature {
     let node = 0;
 
     for (let i = 0; i < depth; ++i) {
-      let feature = floor(constrain(this.treeDNA[node * 2], 0, 1 - 1e-8) * values.length);
-      let threshold = constrain(this.treeDNA[node * 2 + 1], 0, 1);
+      let feature = floor(constrain(this.dtDNA[node * 2], 0, 1 - 1e-6) * values.length);
+      let threshold = constrain(this.dtDNA[node * 2 + 1], 0, 1);
 
       if (values[feature] < threshold)
         node = node * 2 + 1;
@@ -143,7 +143,7 @@ class Creature {
     }
 
     let leaf = node - branches;
-    let mode = constrain(this.treeDNA[branches * 2 + leaf], 0, 1 - 1e-8);
+    let mode = constrain(this.dtDNA[branches * 2 + leaf], 0, 1 - 1e-6);
     return floor(mode * this.modes.length);
   }
 
@@ -225,6 +225,8 @@ point towards
 
     // console.log(closestAngle, closestDist, closestFoodAngle, closestFoodDist);
 
+    if (!nums) return;
+
     for (let i = 0, loops = 0; i < nums.length && loops < 50; ++i, ++loops) {
       let inst = floor(20 * nums[i]);
       // let next = i + 1 < nums.length ? nums[i + 1] : 0;
@@ -265,17 +267,17 @@ point towards
         this.direction = 360 * r0;
       else if (--inst == 0) // threshold r0
         r0 = r0 > r1 ? 1 : 0;
-      else if (--inst == 0) { // switch modes to r0
-        this.mode = constrain(floor(r0 * this.modes.length), 0, this.modes.length - 1);
-        return;
-        // let idx = r1 * (nums.length - 1);
-        // idx -= idx % 2;
-        // i = idx - 1;
-      }
-      else if (--inst == 0 && r0 > 0.5) { // cycle modes if r0 > 0.5
-        this.mode = (this.mode + 1) % this.modes.length;
-        return;
-      }
+      // else if (--inst == 0) { // switch modes to r0
+      //   this.mode = constrain(floor(r0 * this.modes.length), 0, this.modes.length - 1);
+      //   return;
+      //   // let idx = r1 * (nums.length - 1);
+      //   // idx -= idx % 2;
+      //   // i = idx - 1;
+      // }
+      // else if (--inst == 0 && r0 > 0.5) { // cycle modes if r0 > 0.5
+      //   this.mode = (this.mode + 1) % this.modes.length;
+      //   return;
+      // }
       else if (--inst == 0 && millis() - this.lastBred > 250) { // breed
         let energyToGive = constrain(r0, 0.1, 1);
         let hit = this.touch();
