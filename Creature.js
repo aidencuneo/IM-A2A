@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? dna : this.generateDNA(13 * 3 + 5);
+    this.dna = (dna || []).length > 0 ? dna : this.generateDNA(5 + 13 * 3 + 22);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -48,6 +48,8 @@ class Creature {
       this.readDNA(13),
     ]
 
+    this.dtDNA = this.readDNA(22);
+
     // TODO: Change to procedural body instead
     // this.run(this.startCode);
   }
@@ -79,9 +81,19 @@ class Creature {
     if (this.energy < 0)
       this.energy = 0;
 
-    // if (this.mode > 0)
-    //   console.log(this.mode, this.modes[this.mode]);
-    this.run(this.modes[this.mode]);
+    if (frameCount % 10 == 0) {
+      let values = [
+        this.x / gameSize,
+        this.y / gameSize,
+        constrain(this.health / 10, 0, 1),
+        constrain(this.energy / 10, 0, 1),
+        this.direction / 360,
+        constrain(objects.length / 100, 0, 1),
+      ];
+
+      this.mode = this.decideMode(values);
+      this.run(this.modes[this.mode]);
+    }
 
     // if (this.x > gameSize / 2)
     //   destroy(this);
@@ -113,6 +125,26 @@ class Creature {
     fill(c);
     stroke(c);
     circle(this.x, this.y, this.size);
+  }
+
+  decideMode(values) {
+    let depth = 3;
+    let branches = 2 ** depth - 1;
+    let node = 0;
+
+    for (let i = 0; i < depth; ++i) {
+      let feature = floor(constrain(this.treeDNA[node * 2], 0, 1 - 1e-8) * values.length);
+      let threshold = constrain(this.treeDNA[node * 2 + 1], 0, 1);
+
+      if (values[feature] < threshold)
+        node = node * 2 + 1;
+      else
+        node = node * 2 + 2;
+    }
+
+    let leaf = node - branches;
+    let mode = constrain(this.treeDNA[branches * 2 + leaf], 0, 1 - 1e-8);
+    return floor(mode * this.modes.length);
   }
 
   run(nums) {
