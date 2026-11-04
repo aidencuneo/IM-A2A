@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 13 * 3 + 22);
+    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 8 * 4 + 1 + 46);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -15,6 +15,7 @@ class Creature {
     this.y = y ?? random(gameSize);
     this.direction = random(360);
     this.age = 0;
+    this.senses = [];
 
     // Cooldowns
     this.lastBred = millis();
@@ -43,15 +44,21 @@ class Creature {
 
     this.mode = 0;
     this.modes = [
-      this.readDNA(13),
-      this.readDNA(13),
-      this.readDNA(13),
+      this.readDNA(8),
+      this.readDNA(8),
+      this.readDNA(8),
+      this.readDNA(8),
     ]
 
-    this.dtDNA = this.readDNA(22);
+    // this.dtDepth = this.readDNA(1, 16)[0];
+    this.dtDepth = 4;
+    this.dtDNA = this.readDNA(46);
 
     // TODO: Change to procedural body instead
     // this.run(this.startCode);
+
+    this.recalculateSenses();
+    this.senseKeys = Object.keys(this.senses);
   }
 
   generateDNA(length) {
@@ -79,16 +86,8 @@ class Creature {
       destroy(this);
 
     if (frameCount % 10 == 0) {
-      let values = [
-        this.x / gameSize,
-        this.y / gameSize,
-        constrain(this.health / 10, 0, 1),
-        constrain(this.energy / 10, 0, 1),
-        this.direction / 360,
-        constrain(objects.length / 100, 0, 1),
-      ];
-
-      this.mode = this.decideMode(values);
+      this.recalculateSenses();
+      this.mode = this.decideMode();
     }
 
     // if (frameCount % 2 == 0)
@@ -129,16 +128,72 @@ class Creature {
     circle(this.x, this.y, this.size);
   }
 
-  decideMode(values) {
-    let depth = 3;
-    let branches = 2 ** depth - 1;
+  recalculateSenses() {
+    // Get closest creature to this one
+    let closestOther = null;
+    let closestDist = Infinity;
+    let closestFood = null;
+    let closestFoodDist = Infinity;
+    for (let i = 0; i < objects.length; ++i) {
+      let other = objects[i];
+      let dx = other.x - this.x;
+      let dy = other.y - this.y;
+      let distSqr = dx * dx + dy * dy;
+
+      if (other.tag == 'creature') {
+        if (distSqr < closestDist && this != other) {
+          closestOther = other;
+          closestDist = distSqr;
+        }
+      } else if (other.tag == 'food') {
+        if (distSqr < closestFoodDist && this != other) {
+          closestFood = other;
+          closestFoodDist = distSqr;
+        }
+      }
+    }
+
+    let closestAngle = random();
+    if (closestOther) {
+      closestAngle = atan2(closestOther.y - this.y, closestOther.x - this.x);
+      closestAngle = (closestAngle + 360) / 360 % 1;
+    }
+
+    let closestFoodAngle = random();
+    if (closestFood) {
+      closestFoodAngle = atan2(closestFood.y - this.y, closestFood.x - this.x);
+      closestFoodAngle = (closestFoodAngle + 360) / 360 % 1;
+    }
+
+    closestAngle = fixNum(closestAngle);
+    closestFoodAngle = fixNum(closestFoodAngle);
+    closestDist = fixNum(closestDist);
+    closestFoodDist = fixNum(closestFoodDist);
+  
+    this.senses = {
+      x: this.x / gameSize,
+      y: this.y / gameSize,
+      health: constrain(this.health / 10, 0, 1),
+      energy: constrain(this.energy / 10, 0, 1),
+      size: this.size,
+      direction: this.direction / 360,
+      overpopulation: constrain(objects.length / 150, 0, 1),
+      closestOtherAngle: closestAngle,
+      closestOtherDist: closestDist,
+      closestFoodAngle,
+      closestFoodDist,
+    };
+  }
+
+  decideMode() {
+    let branches = 2 ** this.dtDepth - 1;
     let node = 0;
 
-    for (let i = 0; i < depth; ++i) {
-      let feature = floor(constrain(this.dtDNA[node * 2], 0, 1 - 1e-6) * values.length);
+    for (let i = 0; i < this.dtDepth; ++i) {
+      let feature = floor(constrain(this.dtDNA[node * 2], 0, 1 - 1e-6) * this.senseKeys.length);
       let threshold = constrain(this.dtDNA[node * 2 + 1], 0, 1);
 
-      if (values[feature] < threshold)
+      if (this.senseKeys[feature] < threshold)
         node = node * 2 + 1;
       else
         node = node * 2 + 2;
@@ -178,45 +233,6 @@ point towards
     let r0 = 0;
     let r1 = 0;
 
-    // Get closest creature to this one
-    let closestOther = null;
-    let closestDist = Infinity;
-    let closestFood = null;
-    let closestFoodDist = Infinity;
-    for (let i = 0; i < objects.length; ++i) {
-      let other = objects[i];
-      let distSqr = createVector(other.x - this.x, other.y - this.y).magSq();
-
-      if (other.tag == 'creature') {
-        if (distSqr < closestDist && this != other) {
-          closestOther = other;
-          closestDist = distSqr;
-        }
-      } else if (other.tag == 'food') {
-        if (distSqr < closestFoodDist && this != other) {
-          closestFood = other;
-          closestFoodDist = distSqr;
-        }
-      }
-    }
-
-    let closestAngle = random();
-    if (closestOther) {
-      closestAngle = atan2(closestOther.y - this.y, closestOther.x - this.x);
-      closestAngle = (closestAngle + 360) / 360 % 1;
-    }
-
-    let closestFoodAngle = random();
-    if (closestFood) {
-      closestFoodAngle = atan2(closestFood.y - this.y, closestFood.x - this.x);
-      closestFoodAngle = (closestFoodAngle + 360) / 360 % 1;
-    }
-
-    closestAngle = fixNum(closestAngle);
-    closestFoodAngle = fixNum(closestFoodAngle);
-    closestDist = fixNum(closestDist);
-    closestFoodDist = fixNum(closestFoodDist);
-
     // if (sameColour(this.colour, 'white')) {
     //   console.log('same!!!!!!!!!');
     //   console.log(nums);
@@ -246,15 +262,15 @@ point towards
       else if (--inst == 0) // take random
         r0 = random();
       else if (--inst == 0) // take angle of closest creature
-        r0 = closestAngle;
-      else if (--inst == 0 && closestOther) // take distance to closest creature
-        r0 = closestDist;
+        r0 = this.senses.closestOtherAngle;
+      else if (--inst == 0) // take distance to closest creature
+        r0 = this.senses.closestOtherDist;
       else if (--inst == 0) // take angle of closest food
-        r0 = closestFoodAngle;
+        r0 = this.senses.closestFoodAngle;
       else if (--inst == 0) // take distance to closest food
-        r0 = closestFoodDist;
+        r0 = this.senses.closestFoodDist;
       else if (--inst == 0) // take overpopulation ratio
-        r0 = objects.length / 100;
+        r0 = this.senses.overpopulation;
       else if (--inst == 0 && this.energy > 0) { // push towards current direction
         this.energy -= 0.000005 * this.size * r0;
         this.x += r0 * cos(this.direction);
