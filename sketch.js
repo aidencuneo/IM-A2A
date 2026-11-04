@@ -545,6 +545,14 @@ function keyPressed(e) {
           // if ( > 50)
           o.health -= (colourDistance(o.colour, bg) + colourDistance(bg, o.colour)) / 2 / 50000;
         };
+    } else if (k == 'b') {
+      if ('deathcircle' in selectionPressures)
+        delete selectionPressures['deathcircle'];
+      else
+        selectionPressures['deathcircle'] = o => {
+          if (dist(o.x, o.y, gameSize / 2, gameSize / 2) < gameSize / 4)
+            o.health -= 0.1;
+        };
     }
 
     for (let fn of keyPressedFns) fn[1](kl);
