@@ -32,7 +32,7 @@ class Cmd {
           return sendToast("Couldn't set background colour to \"" + args[0] + '"', 3, 'red')
         }
       },
-      color: args => this.cmds.colour(args),
+      colour: args => this.cmds.bg(args),
     };
   }
 

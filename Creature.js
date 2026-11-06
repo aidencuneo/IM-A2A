@@ -337,7 +337,8 @@ point towards
     let a = ca.origDNA;
     let b = cb.origDNA;
     let dna = [];
-    let bDominance = cb.geneDominance / (ca.geneDominance + cb.geneDominance);
+    let totalDominance = ca.geneDominance + cb.geneDominance;
+    let bDominance = totalDominance ? cb.geneDominance / totalDominance : 0.5;
 
     for (let i = 0; i < ceil((a.length + b.length) / 2); ++i) {
       let take = a[i];
@@ -345,9 +346,10 @@ point towards
         take = random();
       else if (random() < bDominance)
         take = b[i];
-      take = fixNum(take)
-      take += random(-0.01, 0.01);
-      dna.push(take);
+      take = fixNum(take);
+      if (random() < 0.05)
+        take += random(-0.05, 0.05);
+      dna.push(constrain(take, 0, 1 - 1e-6));
     }
 
     return dna;
