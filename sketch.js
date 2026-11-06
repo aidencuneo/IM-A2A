@@ -362,11 +362,20 @@ function getToasts(count) {
 
 // Collision functions
 function updateCollisions() {
-  for (let cell of collisionGrid) cell.length = 0;
+  for (let cell of collisionGrid)
+    cell.length = 0;
 
   for (let obj of objects) {
-    if (obj.tag != 'creature' && obj.tag != 'food') continue;
-    let hit = { obj, x: obj.x, y: obj.y, r: obj.size / 2 + 0.5 };
+    if (obj.tag != 'creature' && obj.tag != 'food')
+      continue;
+
+    let hit = {
+      obj,
+      x: obj.x,
+      y: obj.y,
+      r: obj.size / 2 + 0.5,
+    };
+
     let left = max(0, floor((hit.x - hit.r) / collisionCellSize));
     let right = min(collisionCols - 1, floor((hit.x + hit.r) / collisionCellSize));
     let top = max(0, floor((hit.y - hit.r) / collisionCellSize));
