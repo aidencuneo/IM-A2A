@@ -5,7 +5,7 @@
 
 */
 
-let gameSize = 192;
+let gameSize = 256;
 
 // Events
 let updateFns = [];
@@ -417,7 +417,7 @@ function loadScene(name) {
 
 // Object functions
 function spawn(objClass, ...args) {
-  if (objects.length >= 400)
+  if (objects.length >= 500)
     return;
 
   let obj = new objClass(...args);
