@@ -19,9 +19,10 @@ let keyPressedFns = [];
 let keyReleasedFns = [];
 
 // Collision grid
-let collisionCellSize = 16;
-let collisionCols = Math.ceil(gameSize / collisionCellSize);
-let collisionGrid = Array.from({ length: collisionCols ** 2 }, () => []);
+let collCellSize = 16;
+let collCols = Math.ceil(gameSize / collCellSize);
+let collGrid = Array.from({ length: collCols ** 2 }, () => []);
+let collFoodCount = 0;
 
 // State
 let backspaceHeld = 0;
@@ -362,36 +363,49 @@ function getToasts(count) {
 
 // Collision functions
 function updateCollisions() {
-  for (let cell of collisionGrid)
+  for (let cell of collGrid)
     cell.length = 0;
+  collFoodCount = 0;
 
-  for (let obj of objects) {
+  for (let i = 0; i < objects.length; ++i) {
+    let obj = objects[i];
     if (obj.tag != 'creature' && obj.tag != 'food')
       continue;
+
+    collFoodCount += obj.tag == 'food';
+
+    let cx = constrain(floor(obj.x / collCellSize), 0, collCols - 1);
+    let cy = constrain(floor(obj.y / collCellSize), 0, collCols - 1);
 
     let hit = {
       obj,
       x: obj.x,
       y: obj.y,
       r: obj.size / 2 + 0.5,
+      cell: cy * collCols + cx,
+      order: i,
     };
 
-    let left = max(0, floor((hit.x - hit.r) / collisionCellSize));
-    let right = min(collisionCols - 1, floor((hit.x + hit.r) / collisionCellSize));
-    let top = max(0, floor((hit.y - hit.r) / collisionCellSize));
-    let bottom = min(collisionCols - 1, floor((hit.y + hit.r) / collisionCellSize));
+    let left = max(0, floor((hit.x - hit.r) / collCellSize));
+    let right = min(collCols - 1, floor((hit.x + hit.r) / collCellSize));
+    let top = max(0, floor((hit.y - hit.r) / collCellSize));
+    let bottom = min(collCols - 1, floor((hit.y + hit.r) / collCellSize));
 
     for (let y = top; y <= bottom; ++y)
       for (let x = left; x <= right; ++x)
-        collisionGrid[y * collisionCols + x].push(hit);
+        collGrid[y * collCols + x].push(hit);
   }
 }
 
 function collidingWith(x, y) {
-  if (!isFinite(x) || !isFinite(y)) return null;
+  if (!isFinite(x) || !isFinite(y))
+    return null;
+
   x = constrain(round(x), 0, gameSize - 1);
   y = constrain(round(y), 0, gameSize - 1);
-  let cell = collisionGrid[floor(y / collisionCellSize) * collisionCols + floor(x / collisionCellSize)];
+  let cx = floor(y / collCellSize);
+  let cy = floor(x / collCellSize);
+  let cell = collGrid[cy * collCols + cx];
 
   if (!cell)
     return null;
@@ -400,14 +414,60 @@ function collidingWith(x, y) {
     let hit = cell[i];
     let dx = x - hit.x;
     let dy = y - hit.y;
-    if (hit.obj.tag == 'creature') {
-      if (dx * dx + dy * dy <= hit.r * hit.r) return hit.obj;
-    } else if (abs(dx) <= hit.r && abs(dy) <= hit.r)
+
+    if (hit.obj.tag == 'creature' && dx * dx + dy * dy <= hit.r * hit.r)
+      return hit.obj;
+    if (abs(dx) <= hit.r && abs(dy) <= hit.r)
       return hit.obj;
   }
-
   return null;
 }
+
+function findClosest(obj) {
+  let r = {
+    creature: { hit: null, dist: Infinity },
+    food: { hit: null, dist: Infinity },
+  };
+
+  function check(hit) {
+    let other = hit.obj;
+    let nearest = r[other.tag];
+    if (other == obj || !nearest) return;
+
+    let dx = hit.x - obj.x;
+    let dy = hit.y - obj.y;
+    let dist = dx * dx + dy * dy;
+
+    if (dist < nearest.dist || (dist == nearest.dist && objects.indexOf(other) < objects.indexOf(nearest.hit.obj))) {
+      nearest.hit = hit;
+      nearest.dist = dist;
+    }
+  }
+
+  searchNearby(obj, check);
+
+  return {
+    closestOther: r.creature.hit,
+    closestDist: r.creature.dist,
+    closestFood: r.food.hit,
+    closestFoodDist: r.food.dist,
+  };
+}
+
+function searchNearby(obj, check) {
+  let x = constrain(floor(obj.x / collCellSize), 0, collCols - 1);
+  let y = constrain(floor(obj.y / collCellSize), 0, collCols - 1);
+  let checked = new Set(); // hopefully this will speed things up a little
+
+  for (let cy = max(0, y - 4); cy <= min(collCols - 1, y + 4); ++cy)
+    for (let cx = max(0, x - 4); cx <= min(collCols - 1, x + 4); ++cx)
+      for (let hit of collGrid[cy * collCols + cx]) {
+        if (checked.has(hit.obj)) continue;
+        checked.add(hit.obj);
+        check(hit);
+      }
+}
+
 
 // Scene functions
 function loadScene(name) {
@@ -417,7 +477,7 @@ function loadScene(name) {
 
 // Object functions
 function spawn(objClass, ...args) {
-  if (objects.length >= 500)
+  if (objects.length >= 600)
     return;
 
   let obj = new objClass(...args);

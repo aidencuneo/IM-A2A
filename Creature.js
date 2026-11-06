@@ -57,7 +57,7 @@ class Creature {
     // TODO: Change to procedural body instead
     // this.run(this.startCode);
 
-    this.recalculateSenses();
+    this.recalculateSenses(true);
     this.senseKeys = Object.keys(this.senses);
   }
 
@@ -121,30 +121,8 @@ class Creature {
     line(this.x, this.y, this.x + dx, this.y + dy);
   }
 
-  recalculateSenses() {
-    // Get closest creature to this one
-    let closestOther = null;
-    let closestDist = Infinity;
-    let closestFood = null;
-    let closestFoodDist = Infinity;
-    for (let i = 0; i < objects.length; ++i) {
-      let other = objects[i];
-      let dx = other.x - this.x;
-      let dy = other.y - this.y;
-      let distSqr = dx * dx + dy * dy;
-
-      if (other.tag == 'creature') {
-        if (distSqr < closestDist && this != other) {
-          closestOther = other;
-          closestDist = distSqr;
-        }
-      } else if (other.tag == 'food') {
-        if (distSqr < closestFoodDist && this != other) {
-          closestFood = other;
-          closestFoodDist = distSqr;
-        }
-      }
-    }
+  recalculateSenses(doFullScan) {
+    let { closestOther, closestDist, closestFood, closestFoodDist } = findClosest(this, doFullScan);
 
     let closestAngle = random();
     if (closestOther) {
