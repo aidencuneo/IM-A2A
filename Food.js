@@ -18,9 +18,8 @@ class Food {
   }
 
   update() {
+    this.health -= delta / 10;
     if (this.health <= 0)
       destroy(this);
-
-    this.health -= delta / 10;
   }
 }

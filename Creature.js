@@ -61,7 +61,7 @@ class Creature {
     // TODO: Change to procedural body instead
     // this.run(this.startCode);
 
-    this.recalculateSenses(true);
+    this.recalculateSenses();
     this.senseKeys = Object.keys(this.senses);
   }
 
@@ -122,7 +122,12 @@ class Creature {
   }
 
   recalculateSenses(doFullScan) {
-    let { closestOther, closestDist, closestFood, closestFoodDist } = findClosest(this, doFullScan);
+    let {
+      closestOther,
+      closestDist,
+      closestFood,
+      closestFoodDist,
+    } = findClosest(this);
 
     let closestAngle = random();
     if (closestOther) {
