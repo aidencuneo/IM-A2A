@@ -393,7 +393,9 @@ function collidingWith(x, y) {
   y = constrain(round(y), 0, gameSize - 1);
   let cell = collisionGrid[floor(y / collisionCellSize) * collisionCols + floor(x / collisionCellSize)];
 
-  if (!cell) return null;
+  if (!cell)
+    return null;
+
   for (let i = cell.length - 1; i >= 0; --i) {
     let hit = cell[i];
     let dx = x - hit.x;
@@ -403,6 +405,7 @@ function collidingWith(x, y) {
     } else if (abs(dx) <= hit.r && abs(dy) <= hit.r)
       return hit.obj;
   }
+
   return null;
 }
 
