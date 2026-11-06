@@ -85,7 +85,7 @@ class Creature {
     if (this.health <= 0 || this.energy <= -1)
       destroy(this);
 
-    if (frameCount % 10 == 0) {
+    if (frameCount % 5 == 0) {
       this.recalculateSenses();
       this.mode = this.decideMode();
     }
@@ -193,7 +193,7 @@ class Creature {
       let feature = floor(constrain(this.dtDNA[node * 2], 0, 1 - 1e-6) * this.senseKeys.length);
       let threshold = constrain(this.dtDNA[node * 2 + 1], 0, 1);
 
-      if (this.senseKeys[feature] < threshold)
+      if (this.senses[this.senseKeys[feature]] < threshold)
         node = node * 2 + 1;
       else
         node = node * 2 + 2;

@@ -409,7 +409,7 @@ function loadScene(name) {
 
 // Object functions
 function spawn(objClass, ...args) {
-  if (objects.length >= 300)
+  if (objects.length >= 400)
     return;
 
   let obj = new objClass(...args);
@@ -531,7 +531,7 @@ function keyPressed(e) {
         console.log('DEBUG HIT');
         console.log(obj.modes[obj.mode].map(x => floor(x * 20)));
       }
-    } else if (k == 'c') {
+    } else if (k == 'v') {
       if ('middle' in selectionPressures)
         delete selectionPressures['middle'];
       else
@@ -539,7 +539,7 @@ function keyPressed(e) {
           if (dist(o.x, o.y, gameSize / 2, gameSize / 2) > gameSize / 3)
             o.health -= 0.005;
         };
-    } else if (k == 'v') {
+    } else if (k == 'c') {
       if ('camo' in selectionPressures)
         delete selectionPressures['camo'];
       else
