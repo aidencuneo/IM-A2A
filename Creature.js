@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 8 * 4 + 46);
+    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 6 * 8 + 46);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -44,10 +44,14 @@ class Creature {
 
     this.mode = 0;
     this.modes = [
-      this.readDNA(8),
-      this.readDNA(8),
-      this.readDNA(8),
-      this.readDNA(8),
+      this.readDNA(6),
+      this.readDNA(6),
+      this.readDNA(6),
+      this.readDNA(6),
+      this.readDNA(6),
+      this.readDNA(6),
+      this.readDNA(6),
+      this.readDNA(6),
     ]
 
     // this.dtDepth = this.readDNA(1, 16)[0];
@@ -340,12 +344,18 @@ point towards
     let totalDominance = ca.geneDominance + cb.geneDominance;
     let bDominance = totalDominance ? cb.geneDominance / totalDominance : 0.5;
 
-    for (let i = 0; i < ceil((a.length + b.length) / 2); ++i) {
-      let take = a[i];
+    let modeLen = ca.modes[0].length;
+    let codeStart = 5;
+    let codeEnd = codeStart + ca.modes.length * modeLen;
+    let takeB = false;
+
+    for (let i = 0; i < a.length; ++i) {
+      if (i < codeStart || i >= codeEnd || (i - codeStart) % modeLen == 0)
+        takeB = random() < bDominance;
+
+      let take = takeB ? b[i] : a[i];
       if (random() < 0.01)
         take = random();
-      else if (random() < bDominance)
-        take = b[i];
       take = fixNum(take);
       if (random() < 0.05)
         take += random(-0.05, 0.05);
