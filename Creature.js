@@ -83,25 +83,21 @@ class Creature {
       this.target = [random(gameSize), random(gameSize)];
     }
 
-    // Slowly die
-    // this.age += delta;
-    // this.health -= pow(1.5, floor(this.age / 30)) * 0.001;
-    if (this.health <= 0 || this.energy <= -1)
-      return destroy(this);
-
     if (frameCount % 5 == 0) {
       this.recalculateSenses();
       this.mode = this.decideMode();
     }
 
-    // if (frameCount % 2 == 0)
-      this.run(this.modes[this.mode]);
+    this.run(this.modes[this.mode]);
 
     for (let p in selectionPressures)
       if (selectionPressures[p](this)) destroy(this);
 
-    // if (this.x > gameSize / 2)
-    //   destroy(this);
+    // Slowly die
+    // this.age += delta;
+    // this.health -= pow(1.5, floor(this.age / 30)) * 0.001;
+    if (this.health <= 0 || this.energy <= -1)
+      return destroy(this);
 
     // Constrain pos
     this.x = constrain(this.x, this.size / 2, gameSize - this.size / 2);
@@ -276,7 +272,7 @@ point towards
         let hit = this.touch();
         if (hit && hit.tag == 'creature' && this.energy > energyToGive + 0.5) {
           this.energy -= energyToGive;
-          this.breed(hit, r0);
+          this.breed(hit, energyToGive);
           this.lastBred = millis();
         }
       }

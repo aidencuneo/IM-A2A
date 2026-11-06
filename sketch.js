@@ -403,8 +403,8 @@ function collidingWith(x, y) {
 
   x = constrain(round(x), 0, gameSize - 1);
   y = constrain(round(y), 0, gameSize - 1);
-  let cx = floor(y / collCellSize);
-  let cy = floor(x / collCellSize);
+  let cx = floor(x / collCellSize);
+  let cy = floor(y / collCellSize);
   let cell = collGrid[cy * collCols + cx];
 
   if (!cell)
@@ -417,7 +417,7 @@ function collidingWith(x, y) {
 
     if (hit.obj.tag == 'creature' && dx * dx + dy * dy <= hit.r * hit.r)
       return hit.obj;
-    if (abs(dx) <= hit.r && abs(dy) <= hit.r)
+    if (hit.obj.tag != 'creature' && abs(dx) <= hit.r && abs(dy) <= hit.r)
       return hit.obj;
   }
   return null;
