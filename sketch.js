@@ -397,7 +397,7 @@ function updateCollisions() {
   }
 }
 
-function collidingWith(x, y) {
+function collidingWith(x, y, self) {
   if (!isFinite(x) || !isFinite(y))
     return null;
 
@@ -412,6 +412,8 @@ function collidingWith(x, y) {
 
   for (let i = cell.length - 1; i >= 0; --i) {
     let hit = cell[i];
+    if (hit.obj == self) continue;
+
     let dx = x - hit.x;
     let dy = y - hit.y;
 

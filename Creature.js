@@ -323,8 +323,8 @@ point towards
   touch() {
     let dx = (this.size / 2 - 1) * cos(this.direction);
     let dy = (this.size / 2 - 1) * sin(this.direction);
-    let hit1 = collidingWith(this.x + dx, this.y + dy);
-    let hit2 = collidingWith(this.x, this.y);
+    let hit1 = collidingWith(this.x + dx, this.y + dy, this);
+    let hit2 = collidingWith(this.x, this.y, this);
     hit1 = hit1 == this ? null : hit1;
     hit2 = hit2 == this ? null : hit2;
     let hit = hit1 || hit2;
