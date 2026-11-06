@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 8 * 4 + 1 + 46);
+    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 8 * 4 + 46);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -83,7 +83,7 @@ class Creature {
     // this.age += delta;
     // this.health -= pow(1.5, floor(this.age / 30)) * 0.001;
     if (this.health <= 0 || this.energy <= -1)
-      destroy(this);
+      return destroy(this);
 
     if (frameCount % 5 == 0) {
       this.recalculateSenses();
@@ -119,13 +119,6 @@ class Creature {
     strokeWeight(1);
     stroke(this.darkerColour);
     line(this.x, this.y, this.x + dx, this.y + dy);
-  }
-
-  drawColl() {
-    let c = getNextCollColour(this);
-    fill(c);
-    stroke(c);
-    circle(this.x, this.y, this.size);
   }
 
   recalculateSenses() {
@@ -175,13 +168,13 @@ class Creature {
       y: this.y / gameSize,
       health: constrain(this.health / 10, 0, 1),
       energy: constrain(this.energy / 10, 0, 1),
-      size: this.size,
+      size: constrain((this.size - 3) / 12, 0, 1),
       direction: this.direction / 360,
       overpopulation: constrain(objects.length / 150, 0, 1),
       closestOtherAngle: closestAngle,
-      closestOtherDist: closestDist,
+      closestOtherDist: closestOther ? constrain(sqrt(closestDist) / (gameSize * Math.SQRT2), 0, 1) : 1,
       closestFoodAngle,
-      closestFoodDist,
+      closestFoodDist: closestFood ? constrain(sqrt(closestFoodDist) / (gameSize * Math.SQRT2), 0, 1) : 1,
     };
   }
 

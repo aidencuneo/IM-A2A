@@ -13,15 +13,15 @@ let drawFns = [];
 let drawEntFns = [];
 let drawPartFns = [];
 let drawUIFns = [];
-let drawCollFns = [];
 let mousePressedFns = [];
 let mouseReleasedFns = [];
 let keyPressedFns = [];
 let keyReleasedFns = [];
 
-// Colours (for collision)
-let collColours = {};
-let nextCollColour = 1;
+// Collision grid
+let collisionCellSize = 16;
+let collisionCols = Math.ceil(gameSize / collisionCellSize);
+let collisionGrid = Array.from({ length: collisionCols ** 2 }, () => []);
 
 // State
 let backspaceHeld = 0;
@@ -141,17 +141,9 @@ async function setup() {
     textureFiltering: NEAREST,
   });
 
-  collBuf = createFramebuffer({
-    width: gameSize,
-    height: gameSize,
-    antialias: false,
-    textureFiltering: NEAREST,
-  });
-
   gameBuf.pixelDensity(1);
   entBuf.pixelDensity(1);
   uiBuf.pixelDensity(2);
-  collBuf.pixelDensity(1);
 
   // Events
   document.body.onresize = () => {
@@ -186,23 +178,16 @@ function draw() {
   // Frame variables
   delta = deltaTime / 1000;
 
-  // Reset colliders
-  nextCollColour = 1;
-  colliders = {};
-
-  // Draw colliders
-  collBuf.begin();
-  translate(-gameSize / 2, -gameSize / 2);
-  clear();
-  for (let fn of drawCollFns) fn[1]();
-  collBuf.end();
-
-  collBuf.loadPixels(); // Enable collision by default
-  // console.log(colliders);
+  // Update collisions before moving objects
+  updateCollisions();
 
   // Update
   update(); // Main game update
-  for (let fn of updateFns) fn[1]();
+  for (let i = 0; i < updateFns.length;) {
+    let fn = updateFns[i];
+    fn[1]();
+    if (updateFns[i] == fn) ++i;
+  }
 
   // Game
   gameBuf.begin();
@@ -240,8 +225,6 @@ function draw() {
   camera(0, 0, 800, 0, 0, 0); // Reset cam
   texture(uiBuf);
   plane(width, height);
-  // texture(collBuf);
-  // plane(width, height);
 }
 
 function drawUI() {
@@ -377,28 +360,41 @@ function getToasts(count) {
   return ts;
 }
 
-// Buffer functions
-function posToIndex(x, y) {
-  x = round(x);
-  y = round(y);
-  return constrain(4 * y * gameSize + 4 * x, 0, gameSize * gameSize * 4 - 1);
-}
-
-function getBufPixel(buf, x, y) {
-  let i = posToIndex(x, y);
-  return color(...buf.pixels.slice(i, i + 4));
-}
-
 // Collision functions
-function collidingWith(x, y) {
-  let c = getBufPixel(collBuf, x, y);
-  return colliders[c.toString('rgba')];
+function updateCollisions() {
+  for (let cell of collisionGrid) cell.length = 0;
+
+  for (let obj of objects) {
+    if (obj.tag != 'creature' && obj.tag != 'food') continue;
+    let hit = { obj, x: obj.x, y: obj.y, r: obj.size / 2 + 0.5 };
+    let left = max(0, floor((hit.x - hit.r) / collisionCellSize));
+    let right = min(collisionCols - 1, floor((hit.x + hit.r) / collisionCellSize));
+    let top = max(0, floor((hit.y - hit.r) / collisionCellSize));
+    let bottom = min(collisionCols - 1, floor((hit.y + hit.r) / collisionCellSize));
+
+    for (let y = top; y <= bottom; ++y)
+      for (let x = left; x <= right; ++x)
+        collisionGrid[y * collisionCols + x].push(hit);
+  }
 }
 
-function getNextCollColour(obj) {
-  let c = numToColour(nextCollColour++);
-  colliders[c.toString('rgba')] = obj;
-  return c;
+function collidingWith(x, y) {
+  if (!isFinite(x) || !isFinite(y)) return null;
+  x = constrain(round(x), 0, gameSize - 1);
+  y = constrain(round(y), 0, gameSize - 1);
+  let cell = collisionGrid[floor(y / collisionCellSize) * collisionCols + floor(x / collisionCellSize)];
+
+  if (!cell) return null;
+  for (let i = cell.length - 1; i >= 0; --i) {
+    let hit = cell[i];
+    let dx = x - hit.x;
+    let dy = y - hit.y;
+    if (hit.obj.tag == 'creature') {
+      if (dx * dx + dy * dy <= hit.r * hit.r) return hit.obj;
+    } else if (abs(dx) <= hit.r && abs(dy) <= hit.r)
+      return hit.obj;
+  }
+  return null;
 }
 
 // Scene functions
@@ -419,9 +415,11 @@ function spawn(objClass, ...args) {
 }
 
 function destroy(obj) {
+  let idx = objects.indexOf(obj);
+  if (idx == -1) return;
   obj.destroy && obj.destroy();
   unregisterAll(obj);
-  objects.splice(objects.indexOf(obj), 1);
+  objects.splice(idx, 1);
 }
 
 function destroyAll(times) {
@@ -435,7 +433,6 @@ function destroyAll(times) {
   drawEntFns = [];
   drawPartFns = [];
   drawUIFns = [];
-  drawCollFns = [];
   mousePressedFns = [];
   mouseReleasedFns = [];
   keyPressedFns = [];
@@ -451,7 +448,6 @@ function registerAll(obj) {
   registerEvent(obj, 'drawEnt', drawEntFns);
   registerEvent(obj, 'drawPart', drawPartFns);
   registerEvent(obj, 'drawUI', drawUIFns);
-  registerEvent(obj, 'drawColl', drawCollFns);
   registerEvent(obj, 'mousePressed', mousePressedFns);
   registerEvent(obj, 'mouseReleased', mouseReleasedFns);
   registerEvent(obj, 'keyPressed', keyPressedFns);
@@ -464,7 +460,6 @@ function unregisterAll(obj) {
   unregisterEvent(obj, 'drawEnt', drawEntFns);
   unregisterEvent(obj, 'drawPart', drawPartFns);
   unregisterEvent(obj, 'drawUI', drawUIFns);
-  unregisterEvent(obj, 'drawColl', drawCollFns);
   unregisterEvent(obj, 'mousePressed', mousePressedFns);
   unregisterEvent(obj, 'mouseReleased', mouseReleasedFns);
   unregisterEvent(obj, 'keyPressed', keyPressedFns);

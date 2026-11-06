@@ -17,14 +17,6 @@ class Food {
     square(this.x, this.y, this.size);
   }
 
-  drawColl() {
-    rectMode(CENTER);
-    let c = getNextCollColour(this);
-    fill(c);
-    stroke(c);
-    square(this.x, this.y, this.size);
-  }
-
   update() {
     if (this.health <= 0)
       destroy(this);
