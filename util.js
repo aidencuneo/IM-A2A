@@ -18,6 +18,14 @@ function fixNum(n, def) {
   return n;
 }
 
+function toLines(s) {
+  return s.split(/\r\n|\r|\n/);
+}
+
+function countLines(s) {
+  return s.split(/\r\n|\r|\n/).length;
+}
+
 /*
 
 p5 functions

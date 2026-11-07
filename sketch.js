@@ -9,6 +9,7 @@ let gameSize = 256;
 let randomMovement = 0.05; // Creatures drift around at this many pixels per frame
 let startingCreatures = 200;
 let spawnFood = true;
+let drawInfoBox = true;
 
 // Events
 let updateFns = [];
@@ -38,6 +39,7 @@ let rmy = 0;
 let cmdText = '';
 let toasts = [];
 let objects = [];
+let selectedObj = null;
 let lastSpawn = 0;
 let selectionPressures = {};
 
@@ -120,7 +122,7 @@ async function setup() {
 
   // Fonts
   pixelFont = await loadFont('Silkscreen-Regular.ttf');
-  textSize(4);
+  textSize(16);
   textFont(pixelFont);
 
   // Frame buffers
@@ -235,15 +237,16 @@ function draw() {
 
 function drawUI() {
   rectMode(CORNER);
-  textSize(4);
+  textSize(8);
   textFont(pixelFont);
 
   // Commands
   if (cmdText.length) {
+    noStroke();
     fill('#00000080');
-    rect(0, gameSize - 8, gameSize, 4);
+    rect(0, gameSize - 8, gameSize, 8);
     fill('white');
-    text(cmdText, 0, gameSize - 5);
+    text(cmdText, 0, gameSize - 1.5);
 
     // Suggestions
     let sug = cmd.getSuggestions(cmdText);
@@ -254,7 +257,7 @@ function drawUI() {
       // fill('#00000040');
       // rect(0, gameSize - 13 - i * 4, w, 4);
       fill('white');
-      text(s, 0, gameSize - 10 - i * 4);
+      text(s, 0, gameSize - 10 - i * 8);
     }
   }
 
@@ -263,23 +266,65 @@ function drawUI() {
   for (let i = 0; i < ts.length; ++i) {
     let t = ts[i];
     fill(t.colour);
-    placeText(t.msg, 'top', 0, round(gameSize / 3 - i * 5));
+    placeText(t.msg, 'top', 0, round(gameSize / 3 - i * 8));
   }
 
-  textSize(4);
+  textSize(8);
   fill(invertColour(bg));
-  placeText(round(frameRate()), 'topright', -1, 2);
+  placeText(round(frameRate()), 'topright', -1, 1);
+  textLeading(10);
 
-  // Get info on a creature
-  fill('white');
-  let obj = collidingWith(mx, my);
-  if (obj) {
-    textAlign(CENTER, CENTER);
-    roundedText('health: ' + round(obj.health, 2), mx, my - 16);
-    roundedText('size: ' + round(obj.size, 2), mx, my - 10);
-    roundedText('energy: ' + round(obj.energy, 2), mx, my - 4);
-    textAlign(LEFT, BASELINE);
+  // Info box
+  if (!drawInfoBox) return;
+
+  let info = '';
+
+  // Selection pressures
+  for (let pressure in selectionPressures) {
+    info += `${pressure} on\n`;
   }
+
+  // Get info on the selected creature
+  let o = selectedObj;
+  if (o && o.health > 0) {
+
+    info += `
+health: ${round(o.health, 2)}
+energy: ${round(o.energy, 2)}
+size: ${round(o.size, 2)}
+direction: ${round(o.direction)}
+mode: ${o.mode}
+    `.trimEnd()
+  }
+
+  // Draw info
+  let maxLine = 0;
+  let maxLineLen = 0;
+  for (let line of toLines(info)) {
+    if (line.length > maxLineLen) {
+      maxLine = line;
+      maxLineLen = line.length;
+    }
+  }
+
+  if (info.length > 0) {
+    noStroke();
+    fill('#00000080');
+    rect(0, 0, textWidth(maxLine) + 6, 10 * countLines(info) + 2);
+
+    fill('white');
+    stroke('black');
+    roundedText(info, 2, 8);
+  }
+
+  // let obj = collidingWith(mx, my);
+  // if (obj) {
+  //   textAlign(CENTER, CENTER);
+  //   roundedText('health: ' + round(obj.health, 2), mx, my - 16);
+  //   roundedText('size: ' + round(obj.size, 2), mx, my - 10);
+  //   roundedText('energy: ' + round(obj.energy, 2), mx, my - 4);
+  //   textAlign(LEFT, BASELINE);
+  // }
 }
 
 function update() {
@@ -313,12 +358,15 @@ function update() {
 
   if (mouseButton.left) {
     let obj = collidingWith(mx, my);
-    if (obj) destroy(obj);
+    if (obj) selectedObj = obj;
   }
 
-  if (mouseButton.right) {
+  if (mouseButton.right)
+    selectedObj = null;
+
+  // Spawn more creatures
+  if (keyIsDown('Space'))
     spawn(Creature);
-  }
   
   if (frameCount % 10 == 0)
     console.log(creatureCount, round(totalHealth, 1), round(totalEnergy, 1));
@@ -605,7 +653,7 @@ function keyPressed(e) {
   }
 
   else {
-    // Debugging
+    // Selection pressures and other settings
     if (k == 'e') {
       let obj = collidingWith(mx, my);
       if (obj) {
@@ -613,10 +661,10 @@ function keyPressed(e) {
         console.log(obj.modes[obj.mode].map(x => floor(x * 20)));
       }
     } else if (k == 'v') {
-      if ('middle' in selectionPressures)
-        delete selectionPressures['middle'];
+      if ('force middle' in selectionPressures)
+        delete selectionPressures['force middle'];
       else
-        selectionPressures['middle'] = o => {
+        selectionPressures['force middle'] = o => {
           if (dist(o.x, o.y, gameSize / 2, gameSize / 2) > gameSize / 3)
             o.health -= 0.005;
         };
@@ -638,6 +686,8 @@ function keyPressed(e) {
         };
     } else if (k == 'f')
       spawnFood = !spawnFood;
+    else if (kl == 'escape')
+      drawInfoBox = !drawInfoBox;
 
     for (let fn of keyPressedFns) fn[1](kl);
   }

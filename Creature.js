@@ -88,6 +88,9 @@ class Creature {
       this.body.push([px, py]);
     }
 
+    // Stroke needs to be here for some reason
+    stroke(this.darkerColour);
+    strokeWeight(1);
     this.bodyGeom = buildGeometry(() => {
       beginShape();
       for (let p of this.body) {
@@ -95,6 +98,16 @@ class Creature {
       }
       endShape(CLOSE);
     });
+
+    // // stroke('black');
+    // // strokeWeight(3);
+    // this.outlineGeom = buildGeometry(() => {
+    //   beginShape();
+    //   for (let p of this.body) {
+    //     vertex(...p);
+    //   }
+    //   endShape(CLOSE);
+    // });
   }
 
   update() {
@@ -141,10 +154,15 @@ class Creature {
     translate(this.x, this.y);
     rotate(this.direction * 360);
     // circle(0, 0, this.size);
+
+    if (selectedObj == this) {
+      stroke('black');
+      strokeWeight(3);
+    }
     model(this.bodyGeom);
 
-    // stroke(this.darkerColour);
-    // strokeWeight(1);
+    stroke(this.darkerColour);
+    strokeWeight(1);
     line(0, 0, 0, this.size / 2 + 1);
     pop();
   }
@@ -304,8 +322,10 @@ point towards
         this.x -= r0 * cos(this.direction);
         this.y -= r0 * sin(this.direction);
       }
-      else if (--inst == 0) // turn relative
+      else if (--inst == 0) { // turn relative
+        this.energy -= 0.0000005 * this.size * abs(r0 - 0.5);
         this.direction = (this.direction + (r0 - 0.5) * 360 + 360) % 360;
+      }
       else if (--inst == 0) { // look at r0
         this.energy -= 0.0000005 * this.size;
         this.direction = 360 * r0;
