@@ -301,7 +301,7 @@ function update() {
       ++foodCount;
   }
 
-  if (spawnFood && millis() - lastSpawn > 250 && foodCount < 20) {
+  if (spawnFood && millis() - lastSpawn > 250 && foodCount < 30) {
     spawn(Food);
     lastSpawn = millis();
   }
