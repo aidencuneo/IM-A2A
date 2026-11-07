@@ -17,7 +17,7 @@ class Creature {
     this.age = 0;
     this.senses = [];
     this.r0 = 0;
-    this.r1 = 0;
+    // this.r1 = 0;
 
     // Cooldowns
     this.lastBred = millis();
@@ -273,7 +273,7 @@ point towards
     */
 
     let r0 = this.r0;
-    let r1 = this.r1;
+    // let r1 = this.r1;
 
     // if (sameColour(this.colour, 'white')) {
     //   console.log('same!!!!!!!!!');
@@ -288,7 +288,7 @@ point towards
     if (!nums) return;
 
     for (let i = 0, loops = 0; i < nums.length && loops < 50; ++i, ++loops) {
-      let value = 27 * nums[i];
+      let value = 13 * nums[i];
       let inst = floor(value);
       value -= inst;
 
@@ -296,36 +296,32 @@ point towards
         continue;
       else if (--inst == 0) // take value from this instruction into r0
         r0 = value;
-      else if (--inst == 0) // take value from this instruction into r1
-        r1 = value;
-      else if (--inst == 0) // r0 = 1 - r0
-        r0 = 1 - r0;
+      // else if (--inst == 0) // take value from this instruction into r1
+      //   r1 = value;
+      // else if (--inst == 0) // r0 = 1 - r0
+      //   r0 = 1 - r0;
       else if (--inst == 0) // take random
         r0 = random();
-      else if (inst == 20) // take health
-        r0 = this.health / 10;
-      else if (inst == 21) // take energy
-        r0 = this.energy / 10;
+      // else if (inst == 20) // take health
+      //   r0 = this.health / 10;
+      // else if (inst == 21) // take energy
+      //   r0 = this.energy / 10;
       else if (--inst == 0) // take angle of closest creature
         r0 = this.senses.closestOtherAngle;
-      else if (--inst == 0) // take distance to closest creature
-        r0 = this.senses.closestOtherDist;
+      // else if (--inst == 0) // take distance to closest creature
+      //   r0 = this.senses.closestOtherDist;
       else if (--inst == 0) // take angle of closest food
         r0 = this.senses.closestFoodAngle;
-      else if (--inst == 0) // take distance to closest food
-        r0 = this.senses.closestFoodDist;
-      else if (--inst == 0) // take health of closest creature
-        r0 = this.senses.closestOtherHealth;
-      else if (--inst == 0) // take energy of closest creature
-        r0 = this.senses.closestOtherEnergy;
-      else if (--inst == 0) // r0 += r1 (mod 1)
-        r0 = (r0 + r1) % 1;
-      else if (--inst == 0) // r0 = abs(r0 - r1)
-        r0 = abs(r0 - r1);
-      else if (--inst == 0) // swap r0 and r1
-        [r0, r1] = [r1, r0];
-      else if (--inst == 0) // threshold r0
-        r0 = r0 > r1 ? 1 : 0;
+      // else if (--inst == 0) // take distance to closest food
+      //   r0 = this.senses.closestFoodDist;
+      // else if (--inst == 0) // r0 += r1 (mod 1)
+      //   r0 = (r0 + r1) % 1;
+      // else if (--inst == 0) // r0 = abs(r0 - r1)
+      //   r0 = abs(r0 - r1);
+      // else if (--inst == 0) // swap r0 and r1
+      //   [r0, r1] = [r1, r0];
+      // else if (--inst == 0) // threshold r0
+      //   r0 = r0 > r1 ? 1 : 0;
 
       else if (--inst == 0 && this.energy > 0) { // push towards current direction
         this.energy -= 0.000005 * this.size * r0;
@@ -346,8 +342,9 @@ point towards
         this.direction = 360 * r0;
       }
 
-      else if (--inst == 0 && r0 < r1) // skip next instruction if r0 < r1
-        ++i;
+      // else if (--inst == 0 && r0 < r1) // skip next instruction if r0 < r1
+      //   ++i;
+
       // else if (--inst == 0) { // switch modes to r0
       //   this.mode = constrain(floor(r0 * this.modes.length), 0, this.modes.length - 1);
       //   return;
@@ -359,6 +356,7 @@ point towards
       //   this.mode = (this.mode + 1) % this.modes.length;
       //   return;
       // }
+
       else if (--inst == 0 && millis() - this.lastBred > 250) { // breed
         let energyToGive = constrain(r0, 0.1, 1);
         let hit = this.touch();
@@ -397,24 +395,13 @@ point towards
         this.lastBred = millis();
       }
 
-      // else if (--inst == 0 && this.health > 1 && millis() - this.lastConvert > 200) { // convert health to energy
-      //   this.health -= r0;
-      //   this.energy += r0;
-      //   this.lastConvert = millis();
-      // }
-      // else if (--inst == 0 && this.energy > 1 && millis() - this.lastConvert > 200) { // convert energy to health
-      //   this.energy -= r0;
-      //   this.health += r0;
-      //   this.lastConvert = millis();
-      // }
-
       r0 = constrain(abs(r0), 0, 1);
-      r1 = constrain(abs(r1), 0, 1);
+      // r1 = constrain(abs(r1), 0, 1);
     }
 
     // Save for other frames
     this.r0 = r0;
-    this.r1 = r1;
+    // this.r1 = r1;
   }
 
   runSound(code) {
