@@ -6,6 +6,11 @@ class Food {
     this.health = health ?? 1;
     this.energy = energy ?? random(1, 5);
     this.size = size ?? map(this.energy, 0, 5, 5, 10);
+
+    this.colour = 'green';
+    colorMode(HSL);
+    this.darkerColour = color(hue(this.colour), saturation(this.colour), lightness(this.colour) - 10);
+    colorMode(RGB);
   }
 
   drawEnt() {
@@ -13,7 +18,7 @@ class Food {
     let c = lerpColor(color('white'), color('green'), this.energy / 5);
     // print(c);
     fill(c);
-    stroke('black');
+    stroke(this.darkerColour);
     square(this.x, this.y, this.size);
   }
 

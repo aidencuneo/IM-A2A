@@ -570,6 +570,8 @@ function unregisterEvent(obj, event, eventFns) {
 
 // User input
 function mousePressed(e) {
+  startSounds();
+
   for (let fn of mousePressedFns) fn[1](e.button);
 }
 

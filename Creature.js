@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 6 * 8 + 46 + 7);
+    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 6 * 8 + 6 + 46 + 7);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -55,6 +55,8 @@ class Creature {
       this.readDNA(6),
       this.readDNA(6),
     ]
+
+    this.soundCode = this.readDNA(6);
 
     // this.dtDepth = this.readDNA(1, 16)[0];
     this.dtDepth = 4;
@@ -113,6 +115,7 @@ class Creature {
     }
 
     this.run(this.modes[this.mode]);
+    this.runSound(this.soundCode);
 
     for (let p in selectionPressures)
       if (selectionPressures[p](this)) destroy(this);
@@ -377,6 +380,10 @@ point towards
     // Save for other frames
     this.r0 = r0;
     this.r1 = r1;
+  }
+
+  runSound(code) {
+    
   }
 
   touch() {
