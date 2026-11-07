@@ -197,6 +197,9 @@ function draw() {
     if (updateFns[i] == fn) ++i;
   }
 
+  // Update sounds after creatures update
+  updateSounds();
+
   // Game
   gameBuf.begin();
   translate(-gameSize / 2, -gameSize / 2);

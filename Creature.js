@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 6 * 8 + 6 + 46 + 7);
+    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 6 * 8 + 10 + 46 + 7);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -56,10 +56,11 @@ class Creature {
       this.readDNA(6),
     ]
 
-    this.soundCode = this.readDNA(6);
+    this.soundCode = this.readDNA(10);
     this.sound = {
       index: -1, // gets incremented straight away
       ticks: 0,
+      volume: 1,
       pitch: 0,
       duration: 0.1,
       transpose: 0,
@@ -411,7 +412,6 @@ point towards
   }
 
   runSound(code) {
-    if (!osc) return;
     let s = this.sound;
 
     // Continue playing sounds
@@ -423,9 +423,6 @@ point towards
     value -= inst;
     s.ticks = 0;
 
-    if (objects.indexOf(this) != 0)
-      return;
-
     if (inst == 0) { // play note [C1, C7]
       // Alg for getting note from value (24 = C1, 96 = C7)
       let note = floor(map(value, 0, 1, 24, 97)) + s.transpose;
@@ -433,7 +430,7 @@ point towards
       s.ticks = s.duration;
     }
     else if (--inst == 0) { // sleep [0s-1s]
-      s.volume = 0;
+      s.pitch = 0;
       s.ticks = value;
     }
     else if (--inst == 0) // use wave [sine, sawtooth, square, triangle]
