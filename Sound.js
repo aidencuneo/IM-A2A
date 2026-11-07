@@ -32,11 +32,10 @@ function updateSounds() {
   }
 
   let volume = 0;
+  let s = closest?.sound;
 
-  if (closest?.sound && closest.sound.pitch > 0 && closest.sound.ticks > 0) {
-    let s = closest.sound;
-
-    let volume = (1 - sqrt(closestDist) / 50) ** 2 * 0.08 * s.volume;
+  if (s && !closest.dead && s.pitch > 0 && s.ticks > 0) {
+    volume = (1 - sqrt(closestDist) / 50) ** 2 * 0.08 * s.volume;
     osc.freq(s.pitch, 0.02);
 
     if (osc.type != s.wave)

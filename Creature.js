@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 6 * 8 + 10 + 46 + 7);
+    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 6 * 6 + 8 * 6 + 46 + 7);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -52,11 +52,17 @@ class Creature {
       this.readDNA(6),
       this.readDNA(6),
       this.readDNA(6),
-      this.readDNA(6),
-      this.readDNA(6),
     ]
 
-    this.soundCode = this.readDNA(10);
+    this.soundModes = [
+      this.readDNA(8),
+      this.readDNA(8),
+      this.readDNA(8),
+      this.readDNA(8),
+      this.readDNA(8),
+      this.readDNA(8),
+    ];
+
     this.sound = {
       index: -1, // gets incremented straight away
       ticks: 0,
@@ -137,7 +143,7 @@ class Creature {
     }
 
     this.run(this.modes[this.mode]);
-    this.runSound(this.soundCode);
+    this.runSound(this.soundModes[this.mode]);
 
     for (let p in selectionPressures)
       if (selectionPressures[p](this)) destroy(this);
