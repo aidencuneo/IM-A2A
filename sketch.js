@@ -280,9 +280,8 @@ function drawUI() {
   let info = '';
 
   // Selection pressures
-  for (let pressure in selectionPressures) {
+  for (let pressure in selectionPressures)
     info += `${pressure} on\n`;
-  }
 
   // Get info on the selected creature
   let o = selectedObj;
@@ -294,7 +293,7 @@ energy: ${round(o.energy, 2)}
 size: ${round(o.size, 2)}
 direction: ${round(o.direction)}
 mode: ${o.mode}
-    `.trimEnd()
+    `.trim();
   }
 
   // Draw info
@@ -660,6 +659,14 @@ function keyPressed(e) {
         console.log('DEBUG HIT');
         console.log(obj.modes[obj.mode].map(x => floor(x * 20)));
       }
+    } else if (k == 'a') {
+      if ('ageing' in selectionPressures)
+        delete selectionPressures['ageing'];
+      else
+        selectionPressures['ageing'] = o => {
+          o.age += delta;
+          o.health -= pow(1.5, floor(o.age / 30)) * 0.001;
+        };
     } else if (k == 'v') {
       if ('force middle' in selectionPressures)
         delete selectionPressures['force middle'];
