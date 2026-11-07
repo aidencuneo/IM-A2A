@@ -8,6 +8,7 @@
 let gameSize = 256;
 let randomMovement = 0.05; // Creatures drift around at this many pixels per frame
 let startingCreatures = 200;
+let spawnFood = true;
 
 // Events
 let updateFns = [];
@@ -101,6 +102,8 @@ let scenes = {
 
 // Static classes
 let cmd = new Cmd();
+
+p5.disableFriendlyErrors = true;
 
 async function setup() {
   // Lerp state
@@ -298,7 +301,7 @@ function update() {
       ++foodCount;
   }
 
-  if (millis() - lastSpawn > 250 && foodCount < 20) {
+  if (spawnFood && millis() - lastSpawn > 250 && foodCount < 20) {
     spawn(Food);
     lastSpawn = millis();
   }
@@ -631,7 +634,8 @@ function keyPressed(e) {
           if (dist(o.x, o.y, gameSize / 2, gameSize / 2) < gameSize / 4)
             o.health -= 0.1;
         };
-    }
+    } else if (k == 'f')
+      spawnFood = !spawnFood;
 
     for (let fn of keyPressedFns) fn[1](kl);
   }

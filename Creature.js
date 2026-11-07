@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 6 * 8 + 46);
+    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 6 * 8 + 46 + 7);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -60,8 +60,9 @@ class Creature {
     this.dtDepth = 4;
     this.dtDNA = this.readDNA(46);
 
-    // TODO: Change to procedural body instead
-    // this.run(this.startCode);
+    // Random body (3-6 vertices)
+    this.bodyVertexCount = 3 + floor(this.readDNA(1)[0] * 4);
+    this.makeBody(this.readDNA(6));
 
     this.recalculateSenses();
     this.senseKeys = Object.keys(this.senses);
@@ -73,6 +74,17 @@ class Creature {
 
   readDNA(count, values) {
     return this.dna.splice(0, count).map(x => values ? floor(values * x) : x);
+  }
+
+  makeBody(dna) {
+    this.body = [];
+    for (let i = 0; i < this.bodyVertexCount; ++i) {
+      let angle = i * 360 / this.bodyVertexCount;
+      let radius = this.size * map(dna[i], 3, 15, 0.4, 0.6);
+      let px = cos(angle) * radius;
+      let py = cos(angle) * radius;
+      this.body.push([px, py]);
+    }
   }
 
   update() {
@@ -113,16 +125,24 @@ class Creature {
     stroke(this.darkerColour);
     if (this.debug) {
       stroke('black');
-      strokeWeight(3);
+      strokeWeight(2);
     }
     fill(this.colour);
-    circle(this.x, this.y, this.size);
-    let dx = cos(this.direction) * (this.size / 2 + 1);
-    let dy = sin(this.direction) * (this.size / 2 + 1);
-    stroke(this.colour);
-    strokeWeight(1);
+    // circle(this.x, this.y, this.size);
+
+    push();
+    translate(this.x, this.y);
+    rotate(this.direction * 360);
+    beginShape();
+    for (let p of this.body) {
+      vertex(...p);
+    }
+    endShape(CLOSE);
+
     stroke(this.darkerColour);
-    line(this.x, this.y, this.x + dx, this.y + dy);
+    strokeWeight(1);
+    line(0, 0, 0, this.size / 2 + 1);
+    pop();
   }
 
   recalculateSenses() {
@@ -245,6 +265,10 @@ point towards
         r0 = 1 - r0;
       else if (--inst == 0) // take random
         r0 = random();
+      else if (inst == 20) // take health
+        r0 = this.health / 10;
+      else if (inst == 21) // take energy
+        r0 = this.energy / 10;
       else if (--inst == 0) // take angle of closest creature
         r0 = this.senses.closestOtherAngle;
       else if (--inst == 0) // take distance to closest creature
@@ -253,16 +277,19 @@ point towards
         r0 = this.senses.closestFoodAngle;
       else if (--inst == 0) // take distance to closest food
         r0 = this.senses.closestFoodDist;
-      else if (inst == 20) // take health
-        r0 = this.health / 10;
-      else if (inst == 21) // take energy
-        r0 = this.energy / 10;
-      else if (inst == 22) // r0 += r1 (mod 1)
+      else if (--inst == 0) // take health of closest creature
+        r0 = this.senses.closestOtherHealth;
+      else if (--inst == 0) // take energy of closest creature
+        r0 = this.senses.closestOtherEnergy;
+      else if (--inst == 0) // r0 += r1 (mod 1)
         r0 = (r0 + r1) % 1;
-      else if (inst == 23) // r0 = abs(r0 - r1)
+      else if (--inst == 0) // r0 = abs(r0 - r1)
         r0 = abs(r0 - r1);
       else if (--inst == 0) // swap r0 and r1
         [r0, r1] = [r1, r0];
+      else if (--inst == 0) // threshold r0
+        r0 = r0 > r1 ? 1 : 0;
+
       else if (--inst == 0 && this.energy > 0) { // push towards current direction
         this.energy -= 0.000005 * this.size * r0;
         this.x += r0 * cos(this.direction);
@@ -273,10 +300,13 @@ point towards
         this.x -= r0 * cos(this.direction);
         this.y -= r0 * sin(this.direction);
       }
+      else if (--inst == 0) // turn relative
+        this.direction = (this.direction + (r0 - 0.5) * 360 + 360) % 360;
       else if (--inst == 0) // look at r0
         this.direction = 360 * r0;
-      else if (--inst == 0) // threshold r0
-        r0 = r0 > r1 ? 1 : 0;
+
+      else if (--inst == 0 && r0 < r1) // skip next instruction if r0 < r1
+        ++i;
       // else if (--inst == 0) { // switch modes to r0
       //   this.mode = constrain(floor(r0 * this.modes.length), 0, this.modes.length - 1);
       //   return;
@@ -325,18 +355,6 @@ point towards
         this.mitosis();
         this.lastBred = millis();
       }
-      else if (--inst == 0 && r0 < r1) // skip next instruction if r0 < r1
-        ++i;
-      else if (inst == 24) { // steer towards r0 using r1
-        let difference = (360 * r0 - this.direction + 540) % 360 - 180;
-        this.direction = (this.direction + difference * r1 + 360) % 360;
-      }
-      else if (inst == 25) // take closest creature health
-        r0 = this.senses.closestOtherHealth;
-      else if (inst == 26) // take closest creature energy
-        r0 = this.senses.closestOtherEnergy;
-      else if (inst == 19) // turn relative to current direction
-        this.direction = (this.direction + (r0 - 0.5) * 360 + 360) % 360;
 
       // else if (--inst == 0 && this.health > 1 && millis() - this.lastConvert > 200) { // convert health to energy
       //   this.health -= r0;
