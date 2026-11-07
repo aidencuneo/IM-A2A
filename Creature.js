@@ -383,7 +383,24 @@ point towards
   }
 
   runSound(code) {
-    
+    if (!osc) return;
+
+    this.soundInst = (this.soundInst + 1) % code.length;
+    let value = 6 * code[this.soundInst];
+    let inst = floor(value);
+    value -= inst;
+    if (objects.indexOf(this) != 0) return;
+
+    // osc.amp(0.2, 0);
+    // osc.amp(0.01, 0.1);
+    // osc.freq(260);
+
+    if (inst == 0) {
+      // osc.freq(value, 0.01);
+      // osc.amp(0, 0.2);
+    } else if (--inst == 0) {
+
+    }
   }
 
   touch() {
