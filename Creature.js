@@ -80,11 +80,19 @@ class Creature {
     this.body = [];
     for (let i = 0; i < this.bodyVertexCount; ++i) {
       let angle = i * 360 / this.bodyVertexCount;
-      let radius = this.size * map(dna[i], 3, 15, 0.4, 0.6);
+      let radius = this.size * map(dna[i], 0, 1, 0.5, 1.5);
       let px = cos(angle) * radius;
-      let py = cos(angle) * radius;
+      let py = sin(angle) * radius;
       this.body.push([px, py]);
     }
+
+    this.bodyGeom = buildGeometry(() => {
+      beginShape();
+      for (let p of this.body) {
+        vertex(...p);
+      }
+      endShape(CLOSE);
+    });
   }
 
   update() {
@@ -123,24 +131,17 @@ class Creature {
   drawEnt() {
     rectMode(CENTER);
     stroke(this.darkerColour);
-    if (this.debug) {
-      stroke('black');
-      strokeWeight(2);
-    }
+    strokeWeight(1);
     fill(this.colour);
-    // circle(this.x, this.y, this.size);
 
     push();
     translate(this.x, this.y);
     rotate(this.direction * 360);
-    beginShape();
-    for (let p of this.body) {
-      vertex(...p);
-    }
-    endShape(CLOSE);
+    // circle(0, 0, this.size);
+    model(this.bodyGeom);
 
-    stroke(this.darkerColour);
-    strokeWeight(1);
+    // stroke(this.darkerColour);
+    // strokeWeight(1);
     line(0, 0, 0, this.size / 2 + 1);
     pop();
   }
@@ -302,8 +303,10 @@ point towards
       }
       else if (--inst == 0) // turn relative
         this.direction = (this.direction + (r0 - 0.5) * 360 + 360) % 360;
-      else if (--inst == 0) // look at r0
+      else if (--inst == 0) { // look at r0
+        this.energy -= 0.0000005 * this.size;
         this.direction = 360 * r0;
+      }
 
       else if (--inst == 0 && r0 < r1) // skip next instruction if r0 < r1
         ++i;

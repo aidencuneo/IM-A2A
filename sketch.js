@@ -52,7 +52,7 @@ let scenes = {
     bg = color('#5170ff');
     for (let i = 0; i < startingCreatures; ++i) {
       let c = spawn(Creature);
-      c.debug = true;
+      // c.debug = true;
     }
     // let p = spawn(Creature, gameSize / 2, gameSize / 2, [
     //   1, 1, 1, 1, 1,
