@@ -16,6 +16,8 @@ class Creature {
     this.direction = random(360);
     this.age = 0;
     this.senses = [];
+    this.r0 = 0;
+    this.r1 = 0;
 
     // Cooldowns
     this.lastBred = millis();
@@ -74,13 +76,15 @@ class Creature {
   }
 
   update() {
-    // Move around randomly
-    if (abs(this.x - this.target[0]) > 2 || abs(this.y - this.target[1]) > 2) {
-      let angle = atan2(this.target[1] - this.y, this.target[0] - this.x);
-      this.x += cos(angle) * 0.05;
-      this.y += sin(angle) * 0.05;
-    } else {
-      this.target = [random(gameSize), random(gameSize)];
+    // Drifting
+    if (abs(randomMovement) > 0) {
+      if (abs(this.x - this.target[0]) > 2 || abs(this.y - this.target[1]) > 2) {
+        let angle = atan2(this.target[1] - this.y, this.target[0] - this.x);
+        this.x += cos(angle) * randomMovement;
+        this.y += sin(angle) * randomMovement;
+      } else {
+        this.target = [random(gameSize), random(gameSize)];
+      }
     }
 
     if (frameCount % 5 == 0) {
@@ -121,7 +125,7 @@ class Creature {
     line(this.x, this.y, this.x + dx, this.y + dy);
   }
 
-  recalculateSenses(doFullScan) {
+  recalculateSenses() {
     let {
       closestOther,
       closestDist,
@@ -145,7 +149,10 @@ class Creature {
     closestFoodAngle = fixNum(closestFoodAngle);
     closestDist = fixNum(closestDist);
     closestFoodDist = fixNum(closestFoodDist);
-  
+
+    let closestOtherHealth = closestOther ? constrain(closestOther.obj.health / 10, 0, 1) : 0;
+    let closestOtherEnergy = closestOther ? constrain(closestOther.obj.energy / 10, 0, 1) : 0;
+
     this.senses = {
       x: this.x / gameSize,
       y: this.y / gameSize,
@@ -156,6 +163,8 @@ class Creature {
       overpopulation: constrain(objects.length / 150, 0, 1),
       closestOtherAngle: closestAngle,
       closestOtherDist: closestOther ? constrain(sqrt(closestDist) / (gameSize * Math.SQRT2), 0, 1) : 1,
+      closestOtherHealth,
+      closestOtherEnergy,
       closestFoodAngle,
       closestFoodDist: closestFood ? constrain(sqrt(closestFoodDist) / (gameSize * Math.SQRT2), 0, 1) : 1,
     };
@@ -198,7 +207,7 @@ take value
 - push towards reg
 - look at reg
 - threshold reg
-- jump if reg
+- skip next instruction if r0 < r1
 - breed
 - kill
 
@@ -206,8 +215,8 @@ point towards
 
     */
 
-    let r0 = 0;
-    let r1 = 0;
+    let r0 = this.r0;
+    let r1 = this.r1;
 
     // if (sameColour(this.colour, 'white')) {
     //   console.log('same!!!!!!!!!');
@@ -222,17 +231,16 @@ point towards
     if (!nums) return;
 
     for (let i = 0, loops = 0; i < nums.length && loops < 50; ++i, ++loops) {
-      let inst = floor(20 * nums[i]);
-      // let next = i + 1 < nums.length ? nums[i + 1] : 0;
-      // 6 10 1 1 8 14 12
-      // 0 1 6 8 13 15
+      let value = 27 * nums[i];
+      let inst = floor(value);
+      value -= inst;
 
       if (inst == 0)
         continue;
-      else if (--inst == 0 && i + 1 < nums.length) // take next num into r0
-        r0 = nums[++i];
-      else if (--inst == 0 && i + 1 < nums.length) // take next num into r1
-        r1 = nums[++i];
+      else if (--inst == 0) // take value from this instruction into r0
+        r0 = value;
+      else if (--inst == 0) // take value from this instruction into r1
+        r1 = value;
       else if (--inst == 0) // r0 = 1 - r0
         r0 = 1 - r0;
       else if (--inst == 0) // take random
@@ -245,8 +253,16 @@ point towards
         r0 = this.senses.closestFoodAngle;
       else if (--inst == 0) // take distance to closest food
         r0 = this.senses.closestFoodDist;
-      else if (--inst == 0) // take overpopulation ratio
-        r0 = this.senses.overpopulation;
+      else if (inst == 20) // take health
+        r0 = this.health / 10;
+      else if (inst == 21) // take energy
+        r0 = this.energy / 10;
+      else if (inst == 22) // r0 += r1 (mod 1)
+        r0 = (r0 + r1) % 1;
+      else if (inst == 23) // r0 = abs(r0 - r1)
+        r0 = abs(r0 - r1);
+      else if (--inst == 0) // swap r0 and r1
+        [r0, r1] = [r1, r0];
       else if (--inst == 0 && this.energy > 0) { // push towards current direction
         this.energy -= 0.000005 * this.size * r0;
         this.x += r0 * cos(this.direction);
@@ -309,6 +325,19 @@ point towards
         this.mitosis();
         this.lastBred = millis();
       }
+      else if (--inst == 0 && r0 < r1) // skip next instruction if r0 < r1
+        ++i;
+      else if (inst == 24) { // steer towards r0 using r1
+        let difference = (360 * r0 - this.direction + 540) % 360 - 180;
+        this.direction = (this.direction + difference * r1 + 360) % 360;
+      }
+      else if (inst == 25) // take closest creature health
+        r0 = this.senses.closestOtherHealth;
+      else if (inst == 26) // take closest creature energy
+        r0 = this.senses.closestOtherEnergy;
+      else if (inst == 19) // turn relative to current direction
+        this.direction = (this.direction + (r0 - 0.5) * 360 + 360) % 360;
+
       // else if (--inst == 0 && this.health > 1 && millis() - this.lastConvert > 200) { // convert health to energy
       //   this.health -= r0;
       //   this.energy += r0;
@@ -323,6 +352,10 @@ point towards
       r0 = constrain(abs(r0), 0, 1);
       r1 = constrain(abs(r1), 0, 1);
     }
+
+    // Save for other frames
+    this.r0 = r0;
+    this.r1 = r1;
   }
 
   touch() {

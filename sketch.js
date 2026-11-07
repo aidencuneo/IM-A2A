@@ -6,6 +6,8 @@
 */
 
 let gameSize = 256;
+let randomMovement = 0.05; // Creatures drift around at this many pixels per frame
+let startingCreatures = 200;
 
 // Events
 let updateFns = [];
@@ -47,7 +49,7 @@ let redScreenTint = 0;
 let scenes = {
   'main': () => {
     bg = color('#5170ff');
-    for (let i = 0; i < 80; ++i) {
+    for (let i = 0; i < startingCreatures; ++i) {
       let c = spawn(Creature);
       c.debug = true;
     }
@@ -300,6 +302,11 @@ function update() {
     spawn(Food);
     lastSpawn = millis();
   }
+
+  // Respawn creatures if they all die
+  if (creatureCount == 0)
+    for (let i = 0; i < startingCreatures; ++i)
+      spawn(Creature);
 
   if (mouseButton.left) {
     let obj = collidingWith(mx, my);
