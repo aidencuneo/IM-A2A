@@ -57,6 +57,14 @@ class Creature {
     ]
 
     this.soundCode = this.readDNA(6);
+    this.sound = {
+      index: -1, // gets incremented straight away
+      ticks: 0,
+      pitch: 0,
+      duration: 0.1,
+      transpose: 0,
+      wave: 'sine',
+    };
 
     // this.dtDepth = this.readDNA(1, 16)[0];
     this.dtDepth = 4;
@@ -404,23 +412,38 @@ point towards
 
   runSound(code) {
     if (!osc) return;
+    let s = this.sound;
 
-    this.soundInst = (this.soundInst + 1) % code.length;
-    let value = 6 * code[this.soundInst];
+    // Continue playing sounds
+    if ((s.ticks -= delta) > 0) return;
+
+    s.index = (s.index + 1) % code.length;
+    let value = 6 * code[s.index];
     let inst = floor(value);
     value -= inst;
-    if (objects.indexOf(this) != 0) return;
+    s.ticks = 0;
 
-    // osc.amp(0.2, 0);
-    // osc.amp(0.01, 0.1);
-    // osc.freq(260);
+    if (objects.indexOf(this) != 0)
+      return;
 
-    if (inst == 0) {
-      // osc.freq(value, 0.01);
-      // osc.amp(0, 0.2);
-    } else if (--inst == 0) {
-
+    if (inst == 0) { // play note [C1, C7]
+      // Alg for getting note from value (24 = C1, 96 = C7)
+      let note = floor(map(value, 0, 1, 24, 97)) + s.transpose;
+      s.pitch = 440 * 2 ** ((note - 69) / 12);
+      s.ticks = s.duration;
     }
+    else if (--inst == 0) { // sleep [0s-1s]
+      s.volume = 0;
+      s.ticks = value;
+    }
+    else if (--inst == 0) // use wave [sine, sawtooth, square, triangle]
+      s.wave = ['sine', 'sawtooth', 'square', 'triangle'][floor(4 * value)];
+    else if (--inst == 0) // bpm [32, 240]
+      s.duration = 60 / floor(map(value, 0, 1, 30, 241));
+    else if (--inst == 0) // tranpose [-12, 12]
+      s.transpose = floor(map(value, 0, 1, -12, 13));
+    else if (--inst == 0) // volume [0.25, 1]
+      s.volume = map(value, 0, 1, 0.25, 1);
   }
 
   touch() {
