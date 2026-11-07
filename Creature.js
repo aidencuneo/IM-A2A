@@ -444,7 +444,7 @@ point towards
     else if (--inst == 0) // bpm [32, 240]
       s.duration = 60 / floor(map(value, 0, 1, 30, 241));
     else if (--inst == 0) // tranpose [-12, 12]
-      s.transpose = floor(map(value, 0, 1, -12, 13));
+      s.transpose = (s.transpose + floor(map(value, 0, 1, -12, 13))) % 12;
     else if (--inst == 0) // volume [0.25, 1]
       s.volume = map(value, 0, 1, 0.25, 1);
   }

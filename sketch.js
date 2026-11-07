@@ -672,7 +672,7 @@ function keyPressed(e) {
       else
         selectionPressures['ageing'] = o => {
           o.age += delta;
-          o.health -= pow(1.5, floor(o.age / 30)) * 0.001;
+          o.health -= pow(1.5, floor(o.age / 30)) * 0.0005;
         };
     } else if (k == 'v') {
       if ('force middle' in selectionPressures)
