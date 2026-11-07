@@ -152,7 +152,7 @@ class Creature {
 
     push();
     translate(this.x, this.y);
-    rotate(this.direction * 360);
+    rotate(this.direction);
     // circle(0, 0, this.size);
 
     if (selectedObj == this) {
@@ -324,7 +324,7 @@ point towards
       }
       else if (--inst == 0) { // turn relative
         this.energy -= 0.0000005 * this.size * abs(r0 - 0.5);
-        this.direction = (this.direction + (r0 - 0.5) * 360 + 360) % 360;
+        this.direction = (this.direction + (r0 - 0.5) * 45 + 360) % 360;
       }
       else if (--inst == 0) { // look at r0
         this.energy -= 0.0000005 * this.size;

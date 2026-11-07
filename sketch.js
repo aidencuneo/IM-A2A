@@ -285,16 +285,19 @@ function drawUI() {
 
   // Get info on the selected creature
   let o = selectedObj;
-  if (o && o.health > 0) {
+  if (o && !o.dead) {
 
     info += `
 health: ${round(o.health, 2)}
 energy: ${round(o.energy, 2)}
 size: ${round(o.size, 2)}
 direction: ${round(o.direction)}
+colour: ${o.colour}
 mode: ${o.mode}
     `.trim();
   }
+
+  info = info.trim();
 
   // Draw info
   let maxLine = 0;
@@ -549,6 +552,7 @@ function destroy(obj) {
   let idx = objects.indexOf(obj);
   if (idx == -1) return;
   obj.destroy && obj.destroy();
+  obj.dead = true;
   unregisterAll(obj);
   objects.splice(idx, 1);
 }
