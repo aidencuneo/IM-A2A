@@ -288,13 +288,11 @@ point towards
     if (!nums) return;
 
     for (let i = 0, loops = 0; i < nums.length && loops < 50; ++i, ++loops) {
-      let value = 13 * nums[i];
+      let value = 12 * nums[i];
       let inst = floor(value);
       value -= inst;
 
-      if (inst == 0)
-        continue;
-      else if (--inst == 0) // take value from this instruction into r0
+      if (inst == 0) // take value from this instruction into r0
         r0 = value;
       // else if (--inst == 0) // take value from this instruction into r1
       //   r1 = value;

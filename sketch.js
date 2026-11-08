@@ -524,8 +524,9 @@ function searchNearby(obj, check) {
   let y = constrain(floor(obj.y / collCellSize), 0, collCols - 1);
   let checked = new Set(); // hopefully this will speed things up a little
 
-  for (let cy = max(0, y - 4); cy <= min(collCols - 1, y + 4); ++cy)
-    for (let cx = max(0, x - 4); cx <= min(collCols - 1, x + 4); ++cx)
+  // 11x11 area, not the full map
+  for (let cy = max(0, y - 5); cy <= min(collCols - 1, y + 5); ++cy)
+    for (let cx = max(0, x - 5); cx <= min(collCols - 1, x + 5); ++cx)
       for (let hit of collGrid[cy * collCols + cx]) {
         if (checked.has(hit.obj)) continue;
         checked.add(hit.obj);
