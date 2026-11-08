@@ -178,7 +178,7 @@ class Creature {
 
     stroke(this.darkerColour);
     strokeWeight(1);
-    line(0, 0, 0, this.size / 2 + 1);
+    line(0, 0, this.size / 2 + 1, 0);
     pop();
   }
 
@@ -212,7 +212,7 @@ class Creature {
 
     let soundSimilarity = 0;
     if (closestOther && closestDist < 50 * 50)
-      soundSimilarity = this.compareSoundsWith(closestOther);
+      soundSimilarity = this.compareSoundsWith(closestOther.obj);
 
     this.senses = {
       x: this.x / gameSize,
@@ -343,12 +343,12 @@ point towards
       //   r0 = r0 > r1 ? 1 : 0;
 
       else if (--inst == 0 && this.energy > 0) { // push towards current direction
-        this.energy -= 0.000005 * this.size * r0;
+        this.energy -= 0.000005 * this.size;
         this.x += r0 * cos(this.direction);
         this.y += r0 * sin(this.direction);
       }
       else if (--inst == 0 && this.energy > 0) { // push away from current direction
-        this.energy -= 0.000005 * this.size * r0;
+        this.energy -= 0.000005 * this.size;
         this.x -= r0 * cos(this.direction);
         this.y -= r0 * sin(this.direction);
       }

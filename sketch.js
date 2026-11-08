@@ -689,7 +689,7 @@ function keyPressed(e) {
       else
         selectionPressures['camo'] = o => {
           // if ( > 50)
-          o.health -= (colourDistance(o.colour, bg) + colourDistance(bg, o.colour)) / 2 / 50000;
+          o.health -= (colourDistance(o.colour, bg) + colourDistance(bg, o.colour)) / 2 / 20000;
         };
     } else if (k == 'b') {
       if ('deathcircle' in selectionPressures)
