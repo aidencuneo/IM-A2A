@@ -665,7 +665,7 @@ function keyPressed(e) {
       let obj = collidingWith(mx, my);
       if (obj) {
         console.log('DEBUG HIT');
-        console.log(obj.modes[obj.mode].map(x => floor(x * 20)));
+        console.log(obj.modes[obj.mode].map(x => floor(x * 12)));
       }
     } else if (k == 'a') {
       if ('ageing' in selectionPressures)

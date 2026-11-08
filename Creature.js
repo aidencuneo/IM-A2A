@@ -210,6 +210,10 @@ class Creature {
     let closestOtherHealth = closestOther ? constrain(closestOther.obj.health / 10, 0, 1) : 0;
     let closestOtherEnergy = closestOther ? constrain(closestOther.obj.energy / 10, 0, 1) : 0;
 
+    let soundSimilarity = 0;
+    if (closestOther && closestDist < 50 * 50)
+      soundSimilarity = this.compareSoundsWith(closestOther);
+
     this.senses = {
       x: this.x / gameSize,
       y: this.y / gameSize,
@@ -217,13 +221,14 @@ class Creature {
       energy: constrain(this.energy / 10, 0, 1),
       size: constrain((this.size - 3) / 12, 0, 1),
       direction: this.direction / 360,
-      overpopulation: constrain(objects.length / 150, 0, 1),
+      overpopulation: constrain(objects.length / 400, 0, 1),
       closestOtherAngle: closestAngle,
       closestOtherDist: closestOther ? constrain(sqrt(closestDist) / (gameSize * Math.SQRT2), 0, 1) : 1,
       closestOtherHealth,
       closestOtherEnergy,
       closestFoodAngle,
       closestFoodDist: closestFood ? constrain(sqrt(closestFoodDist) / (gameSize * Math.SQRT2), 0, 1) : 1,
+      soundSimilarity,
     };
   }
 
@@ -244,6 +249,22 @@ class Creature {
     let leaf = node - branches;
     let mode = constrain(this.dtDNA[branches * 2 + leaf], 0, 1 - 1e-6);
     return floor(mode * this.modes.length);
+  }
+
+  compareSounds(a, b) {
+    let matches = 0;
+    for (let i = 0; i < a.length; ++i)
+      if (floor(a[i] * 6) == floor(b[i] * 6))
+        ++matches;
+    return matches / a.length;
+  }
+
+  compareSoundsWith(other) {
+    if (!other.soundModes) return 0;
+    return this.compareSounds(
+      this.soundModes[this.mode],
+      other.soundModes[other.mode],
+    );
   }
 
   run(nums) {
