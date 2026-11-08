@@ -168,6 +168,9 @@ async function setup() {
 
   // Intro toast
   sendToast('Use / to enter commands');
+
+  // Turn on ageing by default
+  keyPressed({ key: 'a' });
 }
 
 function draw() {
@@ -284,9 +287,10 @@ function drawUI() {
 
   let info = '';
 
-  info += `
+  if (Object.keys(selectionPressures).length)
+    info += `
 pressure: ${round(pressure, 2)}
-  `.trim() + '\n';
+    `.trim() + '\n';
 
   // Selection pressures
   for (let pressure in selectionPressures)

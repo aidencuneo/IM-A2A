@@ -106,7 +106,8 @@ class Creature {
     // Stroke needs to be here for some reason
     stroke(this.darkerColour);
     strokeWeight(1);
-    if (!creatureOutline) noStroke();
+    if (!creatureOutline)
+      stroke('#00000000');
 
     this.bodyGeom = buildGeometry(() => {
       beginShape();
@@ -166,6 +167,9 @@ class Creature {
     stroke(this.darkerColour);
     strokeWeight(1);
     fill(this.colour);
+
+    if (!creatureOutline)
+      stroke('#00000000');
 
     push();
     translate(this.x, this.y);
