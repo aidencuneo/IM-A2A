@@ -3,9 +3,9 @@ class Food {
     this.tag = 'food';
     this.x = x ?? random(gameSize);
     this.y = y ?? random(gameSize);
-    this.health = health ?? 1;
-    this.energy = energy ?? random(1, 5);
-    this.size = size ?? map(this.energy, 0, 5, 5, 10);
+    this.health = health ?? 5;
+    this.energy = energy ?? random(1, 20);
+    this.size = size ?? map(this.energy, 0, 20, 5, 10);
 
     this.colour = 'green';
     colorMode(HSL);
@@ -15,7 +15,7 @@ class Food {
 
   drawEnt() {
     rectMode(CENTER);
-    let c = lerpColor(color('white'), color('green'), this.energy / 5);
+    let c = lerpColor(color('white'), color('green'), this.energy / 20);
     // print(c);
     fill(c);
     stroke(this.darkerColour);

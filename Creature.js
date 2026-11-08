@@ -394,20 +394,16 @@ point towards
           this.energy += min(1, hit.energy);
           --hit.health;
           --hit.energy;
-          // if (hit.health <= 0)
-          //   destroy(hit);
           this.lastKill = millis();
         }
       }
-      else if (--inst == 0 && millis() - this.lastEat > 100) { // eat
+      else if (--inst == 0 && millis() - this.lastEat > 200) { // eat
         let hit = this.touch();
         if (hit && hit.tag == 'food') {
           this.health += min(1, hit.health);
-          this.energy += hit.energy;
+          this.energy += min(2, hit.energy);
           --hit.health;
-          hit.energy = 0;
-          // if (hit.health <= 0)
-          //   destroy(hit);
+          hit.energy -= 2;
           this.lastEat = millis();
         }
       }

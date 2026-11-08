@@ -327,15 +327,6 @@ mode: ${o.mode}
     stroke('black');
     roundedText(info, 2, 8);
   }
-
-  // let obj = collidingWith(mx, my);
-  // if (obj) {
-  //   textAlign(CENTER, CENTER);
-  //   roundedText('health: ' + round(obj.health, 2), mx, my - 16);
-  //   roundedText('size: ' + round(obj.size, 2), mx, my - 10);
-  //   roundedText('energy: ' + round(obj.energy, 2), mx, my - 4);
-  //   textAlign(LEFT, BASELINE);
-  // }
 }
 
 function update() {
@@ -357,7 +348,7 @@ function update() {
       ++foodCount;
   }
 
-  if (spawnFood && millis() - lastSpawn > 100 && foodCount < 30) {
+  if (spawnFood && millis() - lastSpawn > 200 && foodCount < 30) {
     spawn(Food);
     lastSpawn = millis();
   }
