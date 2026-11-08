@@ -5,7 +5,7 @@ class Creature {
     // Get DNA
     // if (dna && dna.length != 0 && dna.length != 24)
     //   console.error(dna.length);
-    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 6 * 6 + 8 * 6 + 46 + 7);
+    this.dna = (dna || []).length > 0 ? [...dna] : this.generateDNA(5 + 8 * 6 + 8 * 6 + 46 + 7);
     this.origDNA = [...this.dna];
     // print(this.dna);
 
@@ -46,12 +46,12 @@ class Creature {
 
     this.mode = 0;
     this.modes = [
-      this.readDNA(6),
-      this.readDNA(6),
-      this.readDNA(6),
-      this.readDNA(6),
-      this.readDNA(6),
-      this.readDNA(6),
+      this.readDNA(8),
+      this.readDNA(8),
+      this.readDNA(8),
+      this.readDNA(8),
+      this.readDNA(8),
+      this.readDNA(8),
     ]
 
     this.soundModes = [
@@ -106,6 +106,8 @@ class Creature {
     // Stroke needs to be here for some reason
     stroke(this.darkerColour);
     strokeWeight(1);
+    if (!creatureOutline) noStroke();
+
     this.bodyGeom = buildGeometry(() => {
       beginShape();
       for (let p of this.body) {

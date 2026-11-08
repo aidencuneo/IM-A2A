@@ -10,6 +10,8 @@ let randomMovement = 0.05; // Creatures drift around at this many pixels per fra
 let startingCreatures = 200;
 let spawnFood = true;
 let drawInfoBox = true;
+let pressure = 1; // How much to kill creatures via selection pressures (controlled by scrolling)
+let creatureOutline = false;
 
 // Events
 let updateFns = [];
@@ -282,6 +284,10 @@ function drawUI() {
 
   let info = '';
 
+  info += `
+pressure: ${round(pressure, 2)}
+  `.trim() + '\n';
+
   // Selection pressures
   for (let pressure in selectionPressures)
     info += `${pressure} on\n`;
@@ -351,7 +357,7 @@ function update() {
       ++foodCount;
   }
 
-  if (spawnFood && millis() - lastSpawn > 250 && foodCount < 30) {
+  if (spawnFood && millis() - lastSpawn > 100 && foodCount < 30) {
     spawn(Food);
     lastSpawn = millis();
   }
@@ -634,6 +640,13 @@ function mouseReleased(e) {
   for (let fn of mouseReleasedFns) fn[1](e.button);
 }
 
+function mouseWheel(e) {
+  if (e.delta < 0)
+    pressure *= 1.1;
+  else if (e.delta > 0)
+    pressure /= 1.1;
+}
+
 function keyPressed(e) {
   let k = e.key;
   let kl = k.toLowerCase();
@@ -660,8 +673,12 @@ function keyPressed(e) {
   }
 
   else {
-    // Selection pressures and other settings
-    if (k == 'e') {
+    // Keyboard controls
+    if (kl == 'backspace' || kl == 'delete') {
+      if (selectedObj)
+        destroy(selectedObj);
+      selectedObj = null;
+    } else if (k == 'e') {
       let obj = collidingWith(mx, my);
       if (obj) {
         console.log('DEBUG HIT');
@@ -673,7 +690,7 @@ function keyPressed(e) {
       else
         selectionPressures['ageing'] = o => {
           o.age += delta;
-          o.health -= pow(1.5, floor(o.age / 30)) * 0.0005;
+          o.health -= pressure * pow(1.5, floor(o.age / 30)) * 0.0005;
         };
     } else if (k == 'v') {
       if ('force middle' in selectionPressures)
@@ -681,7 +698,7 @@ function keyPressed(e) {
       else
         selectionPressures['force middle'] = o => {
           if (dist(o.x, o.y, gameSize / 2, gameSize / 2) > gameSize / 3)
-            o.health -= 0.005;
+            o.health -= pressure * 0.005;
         };
     } else if (k == 'c') {
       if ('camo' in selectionPressures)
@@ -689,7 +706,7 @@ function keyPressed(e) {
       else
         selectionPressures['camo'] = o => {
           // if ( > 50)
-          o.health -= (colourDistance(o.colour, bg) + colourDistance(bg, o.colour)) / 2 / 20000;
+          o.health -= pressure * (colourDistance(o.colour, bg) + colourDistance(bg, o.colour)) / 2 / 2000;
         };
     } else if (k == 'b') {
       if ('deathcircle' in selectionPressures)
@@ -697,7 +714,7 @@ function keyPressed(e) {
       else
         selectionPressures['deathcircle'] = o => {
           if (dist(o.x, o.y, gameSize / 2, gameSize / 2) < gameSize / 4)
-            o.health -= 0.1;
+            o.health -= pressure * 0.1;
         };
     } else if (k == 'f')
       spawnFood = !spawnFood;
